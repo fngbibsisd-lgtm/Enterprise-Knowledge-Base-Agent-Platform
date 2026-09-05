@@ -1,8 +1,9 @@
 """
 聊天接口 — POST /chat：RAG 检索 → LLM 生成 → 保存记录 → 返回 answer + sources。
 """
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from backend.config import Config
+from backend.security.auth import require_user
 from backend.models.schemas import ChatResponse,ChatRequest
 from backend.services import rag,llm
 from backend.database import crud
@@ -10,7 +11,7 @@ from backend.database import crud
 config = Config()
 router = APIRouter()
 
-@router.post("/chat", response_model=ChatResponse)
+@router.post("/chat", response_model=ChatResponse, dependencies=[Depends(require_user)])
 async def chat(request: ChatRequest):
     """
     聊天窗口

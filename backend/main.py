@@ -15,11 +15,14 @@ from backend.api.upload import router as upload_router
 from backend.api.chat import router as chat_router
 from backend.api.admin import router as admin_router
 from backend.api.agent_chat import router as agent_chat_router
+from backend.api.auth import router as auth_router
 from backend.services.rag import get_index_status
+from backend.security.auth import ensure_default_admin
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     config=Config()
     init_db(config)
+    ensure_default_admin(config)
     status = get_index_status(config)
     print(f"\n{'='*50}")
     print(f"  索引状态: {'已加载' if status['indexed'] else '空索引，请上传PDF'}")
@@ -38,6 +41,7 @@ app.include_router(upload_router)
 app.include_router(chat_router)
 app.include_router(admin_router)
 app.include_router(agent_chat_router)
+app.include_router(auth_router)
 @app.get("/status")
 async def status():
     """

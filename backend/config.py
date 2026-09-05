@@ -49,3 +49,8 @@ class Config:
     mysql_password: str = os.getenv("MYSQL_PASSWORD", "")
     mysql_database: str = os.getenv("MYSQL_DATABASE", "rag_agent")
     db_path: str = "./chat.db"           # 遗留：SQLite 路径，切换 MySQL 后可删除
+
+    # ========== 权限（V0.4）==========
+    admin_username: str = os.getenv("ADMIN_USERNAME", "admin")
+    admin_password: str = os.getenv("ADMIN_PASSWORD", "admin123")
+    token_ttl_hours: int = 24

@@ -33,3 +33,24 @@ class AgentChatResponse(BaseModel):
     tool_calls: list[dict] = []   # 记录 Agent 调用了哪些工具、什么参数、什么结果
     iterations: int = 1           # 经过了轮 LLM 调用
 
+
+# ========== V0.4 权限相关模型 ==========
+
+class LoginRequest(BaseModel):
+    """登录请求"""
+    username: str
+    password: str
+
+
+class LoginResponse(BaseModel):
+    """登录响应 — 返回 token 和用户角色"""
+    token: str
+    username: str
+    role: str
+
+
+class RegisterRequest(BaseModel):
+    """注册请求 — 默认注册为 user 角色"""
+    username: str
+    password: str
+

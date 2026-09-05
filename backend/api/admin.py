@@ -4,8 +4,9 @@
 清空/重置知识库（支持按时间范围删除）
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from backend.config import Config
+from backend.security.auth import require_admin
 from backend.models.schemas import ResetRequest
 from backend.services.rag import reset_index
 from backend.database.connection import get_connection
@@ -16,7 +17,7 @@ router = APIRouter(prefix="/admin", tags=["管理"])
 TIME_MAP = {"2h":2,"12h":12,"24h":24,"all":None}
 
 
-@router.post("/reset")
+@router.post("/reset", dependencies=[Depends(require_admin)])
 def reset_knowledge_base(request: ResetRequest):
     """
     重置知识库

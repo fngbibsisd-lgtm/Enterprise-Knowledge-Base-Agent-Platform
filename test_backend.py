@@ -29,6 +29,14 @@ def check(name: str, ok: bool, detail: str = "") -> bool:
 def main() -> int:
     results = []
 
+    # 0. 登录拿 token（默认 admin/admin123）
+    r = httpx.post(f"{BASE}/auth/login", json={"username": "admin", "password": "admin123"}, timeout=30)
+    if r.status_code != 200:
+        print("[FAIL] 登录失败，请确认后端已启动且 admin 账号已预置")
+        return 1
+    token = r.json()["token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
     # 1. 根路由
     r = httpx.get(f"{BASE}/")
     ok = r.status_code == 200 and r.json().get("status") == "running"
@@ -40,20 +48,20 @@ def main() -> int:
     results.append(check("GET /status", ok, f"chunks={r.json().get('total_chunks')}"))
 
     # 3. RAG 问答（文档检索 + LLM）
-    r = httpx.post(f"{BASE}/chat", json={"query": "2024年国民经济和社会发展情况如何？"}, timeout=120)
+    r = httpx.post(f"{BASE}/chat", json={"query": "2024年国民经济和社会发展情况如何？"}, headers=headers, timeout=120)
     d = r.json() if r.status_code == 200 else {}
     ok = r.status_code == 200 and bool(d.get("answer")) and bool(d.get("sources"))
     results.append(check("POST /chat (RAG)", ok, f"status={r.status_code}, sources={len(d.get('sources', []))}"))
 
     # 4. Agent 数据类（应自动调 sql_query）
-    r = httpx.post(f"{BASE}/chat/agent", json={"query": "最近上传了几个文件？"}, timeout=120)
+    r = httpx.post(f"{BASE}/chat/agent", json={"query": "最近上传了几个文件？"}, headers=headers, timeout=120)
     d = r.json() if r.status_code == 200 else {}
     ok = r.status_code == 200 and any(t.get("tool_name") == "sql_query" for t in d.get("tool_calls", []))
     results.append(check("POST /chat/agent (sql_query)", ok,
                          f"status={r.status_code}, iterations={d.get('iterations')}"))
 
     # 5. Agent 文档类（应自动调 knowledge_search）
-    r = httpx.post(f"{BASE}/chat/agent", json={"query": "2024年GDP增长情况如何？"}, timeout=120)
+    r = httpx.post(f"{BASE}/chat/agent", json={"query": "2024年GDP增长情况如何？"}, headers=headers, timeout=120)
     d = r.json() if r.status_code == 200 else {}
     ok = r.status_code == 200 and any(t.get("tool_name") == "knowledge_search" for t in d.get("tool_calls", []))
     results.append(check("POST /chat/agent (knowledge_search)", ok, f"status={r.status_code}"))

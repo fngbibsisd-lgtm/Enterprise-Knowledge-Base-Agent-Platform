@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+openai
+faiss-cpu
+numpy
+PyPDF2
+python-multipart
+python-dotenv
+pymysql

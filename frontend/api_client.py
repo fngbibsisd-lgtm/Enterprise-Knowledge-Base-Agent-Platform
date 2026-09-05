@@ -2,72 +2,102 @@
 后端 API 客户端
 
 用 httpx 封装后端接口，供 app.py 调用。每个函数对应一个后端接口。
-
-你需要实现 5 个函数：
-    - get_status()      -> dict   查询知识库状态
-    - upload_file(file) -> dict   上传文档
-    - chat(query)       -> dict   普通 RAG 问答
-    - agent_chat(query) -> dict   Agent 问答
-    - reset(since)      -> dict   重置知识库
-
-提示（后端接口都在 backend/api/ 下，返回 JSON）：
-    httpx.get(BACKEND_URL + "/status").json()
-    httpx.post(BACKEND_URL + "/upload", files={"file": (文件名, 文件内容)})
-    httpx.post(BACKEND_URL + "/chat", json={"query": query})
-    httpx.post(BACKEND_URL + "/chat/agent", json={"query": query})
-    httpx.post(BACKEND_URL + "/admin/reset", json={"since": since})
+V0.4 起：除 get_status 外，其余接口需要登录 token（Authorization: Bearer）。
 """
 
 import httpx
 from config import BACKEND_URL
+
 TIMEOUT = httpx.Timeout(300.0, connect=10.0)
 
+
+def _headers(token=None):
+    """构造请求头：有 token 则带 Authorization。"""
+    return {"Authorization": f"Bearer {token}"} if token else {}
+
+
 def get_status():
-    """查询知识库状态，返回 {"indexed": bool, "total_chunks": int}。TODO：实现"""
-    # TODO: GET {BACKEND_URL}/status，返回 JSON
+    """查询知识库状态，返回 {"indexed": bool, "total_chunks": int}。"""
     try:
-        return httpx.get(BACKEND_URL + "/status",timeout=TIMEOUT).json()
-    except:
-        return {"indexed": False, "total_chunks": 0,"error":"后端未启动"}
+        return httpx.get(BACKEND_URL + "/status", timeout=TIMEOUT).json()
+    except Exception:
+        return {"indexed": False, "total_chunks": 0, "error": "后端未启动"}
 
 
-def upload_file(file):
-    """
-    上传文档。file 是 Streamlit 的 UploadedFile 对象（有 .name 和 .getvalue()）。
-    返回 {"filename": str, "message": str}。TODO：实现
-    """
-    # TODO: POST {BACKEND_URL}/upload
-    # 提示：files={"file": (file.name, file.getvalue())}
-    files={"file":(file.name,file.getvalue())}
-    resp=httpx.post(BACKEND_URL + "/upload", files=files,timeout=TIMEOUT)
+def login(username, password):
+    """登录，成功返回 {"token": str, "username": str, "role": str}，失败返回 {"error": str}。"""
+    resp = httpx.post(
+        BACKEND_URL + "/auth/login",
+        json={"username": username, "password": password},
+        timeout=TIMEOUT,
+    )
+    if resp.status_code != 200:
+        try:
+            error = resp.json().get("detail") or f"登录失败(HTTP {resp.status_code})"
+        except Exception:
+            error = f"登录失败(HTTP {resp.status_code})"
+        return {"error": error}
+    return resp.json()
+
+
+def register(username, password):
+    """注册新用户（默认 user 角色），成功返回 token（注册即登录），失败返回 {"error": str}。"""
+    resp = httpx.post(
+        BACKEND_URL + "/auth/register",
+        json={"username": username, "password": password},
+        timeout=TIMEOUT,
+    )
+    if resp.status_code != 200:
+        try:
+            error = resp.json().get("detail") or f"注册失败(HTTP {resp.status_code})"
+        except Exception:
+            error = f"注册失败(HTTP {resp.status_code})"
+        return {"error": error}
+    return resp.json()
+
+
+def upload_file(file, token=None):
+    """上传文档（需 admin），返回 {"filename": str, "message": str}。"""
+    files = {"file": (file.name, file.getvalue())}
+    resp = httpx.post(BACKEND_URL + "/upload", files=files, headers=_headers(token), timeout=TIMEOUT)
     if resp.status_code != 200:
         try:
             data = resp.json()
-            error = data.get("detail") or data.get("message") or data.get(
-                "error") or f"上传失败(HTTP {resp.status_code})"
+            error = data.get("detail") or data.get("message") or data.get("error") or f"上传失败(HTTP {resp.status_code})"
         except Exception:
             error = f"上传失败(HTTP {resp.status_code})"
         return {"error": error}
     return resp.json()
 
 
-def chat(query):
-    """普通 RAG 问答，返回 {"answer": str, "sources": list}。TODO：实现"""
-    # TODO: POST {BACKEND_URL}/chat，body={"query": query}
-    response=httpx.post(BACKEND_URL + "/chat", json={"query": query},timeout=TIMEOUT).json()
-    return response
+def chat(query, token=None):
+    """普通 RAG 问答（需登录），返回 {"answer": str, "sources": list}。"""
+    resp = httpx.post(BACKEND_URL + "/chat", json={"query": query}, headers=_headers(token), timeout=TIMEOUT)
+    if resp.status_code != 200:
+        try:
+            return {"error": resp.json().get("detail") or f"请求失败(HTTP {resp.status_code})"}
+        except Exception:
+            return {"error": f"请求失败(HTTP {resp.status_code})"}
+    return resp.json()
 
 
+def agent_chat(query, token=None):
+    """Agent 问答（需登录），返回 {"answer": str, "tool_calls": list, "iterations": int}。"""
+    resp = httpx.post(BACKEND_URL + "/chat/agent", json={"query": query}, headers=_headers(token), timeout=TIMEOUT)
+    if resp.status_code != 200:
+        try:
+            return {"error": resp.json().get("detail") or f"请求失败(HTTP {resp.status_code})"}
+        except Exception:
+            return {"error": f"请求失败(HTTP {resp.status_code})"}
+    return resp.json()
 
-def agent_chat(query):
-    """Agent 问答，返回 {"answer": str, "tool_calls": list, "iterations": int}。TODO：实现"""
-    # TODO: POST {BACKEND_URL}/chat/agent，body={"query": query}
-    agent_response=httpx.post(BACKEND_URL + "/chat/agent", json={"query": query},timeout=TIMEOUT).json()
-    return agent_response
 
-
-def reset(since):
-    """重置知识库，since 可选 "all" / "2h" / "12h" / "24h"。TODO：实现"""
-    # TODO: POST {BACKEND_URL}/admin/reset，body={"since": since}
-    reset_one=httpx.post(BACKEND_URL + "/admin/reset", json={"since": since},timeout=TIMEOUT).json()
-    return reset_one
+def reset(since, token=None):
+    """重置知识库（需 admin），since 可选 "all" / "2h" / "12h" / "24h"。"""
+    resp = httpx.post(BACKEND_URL + "/admin/reset", json={"since": since}, headers=_headers(token), timeout=TIMEOUT)
+    if resp.status_code != 200:
+        try:
+            return {"error": resp.json().get("detail") or f"重置失败(HTTP {resp.status_code})"}
+        except Exception:
+            return {"error": f"重置失败(HTTP {resp.status_code})"}
+    return resp.json()

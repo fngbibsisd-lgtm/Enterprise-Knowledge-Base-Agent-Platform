@@ -2,8 +2,9 @@
 Agent 聊天接口 — POST /chat/agent：调用 run_agent，由 LLM 自主决定是否检索、查库。
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from backend.config import Config
+from backend.security.auth import require_user
 from backend.models.schemas import AgentChatRequest, AgentChatResponse
 from backend.agent.executor import run_agent
 
@@ -11,7 +12,7 @@ config = Config()
 router = APIRouter(prefix="/chat", tags=["Agent 聊天"])
 
 
-@router.post("/agent", response_model=AgentChatResponse)
+@router.post("/agent", response_model=AgentChatResponse, dependencies=[Depends(require_user)])
 async def agent_chat(request: AgentChatRequest):
     """
     Agent 智能聊天

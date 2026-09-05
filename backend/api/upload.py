@@ -3,8 +3,9 @@
 """
 import os
 import hashlib
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from backend.config import Config
+from backend.security.auth import require_admin
 from backend.models.schemas import UploadResponse
 from backend.services import rag
 from backend.database.connection import get_connection
@@ -12,7 +13,7 @@ router = APIRouter()
 
 ALLOWED_EXTENSIONS = {'.pdf', '.txt'}
 config=Config()
-@router.post("/upload",response_model=UploadResponse)
+@router.post("/upload",response_model=UploadResponse,dependencies=[Depends(require_admin)])
 async def upload_file(file: UploadFile = File(...)):
     """
     文件上传接口
