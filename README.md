@@ -15,7 +15,8 @@
     `sql_query` —— 查询结构化数据（仅允许 SELECT，白名单表）
 - 年份精确过滤：统计公报类文档按年份精确匹配，解决「正文雷同导致年份串味」的问题
 - 知识库管理：状态查询、按时间范围重置索引（2h / 12h / 24h / all）
-- Streamlit 前端：侧边栏（上传/状态/重置）+ 双模式对话界面
+- 用户认证与权限：用户名密码登录，admin/user 两角色；上传/重置限 admin，问答需登录
+- Streamlit 前端：登录界面 + 侧边栏（上传/状态/重置）+ 双模式对话界面
 
 
 ## 二、技术栈
@@ -108,7 +109,14 @@ Windows 下 faiss-cpu 建议用清华镜像：
 
     streamlit run app.py
 
-浏览器打开 Streamlit 输出的地址（默认 http://localhost:8501），上传 PDF 后即可提问。
+浏览器打开 Streamlit 输出的地址（默认 http://localhost:8501），登录后即可提问。
+
+### 4.7 Docker 一键启动
+
+    docker compose up --build
+
+自动拉起 MySQL 和 backend 两个容器，backend 等 MySQL 就绪后自动建表并预置 admin 账号（默认 admin / admin123）。
+访问 http://localhost:8000/docs。
 
 
 ## 五、API 接口
@@ -117,25 +125,31 @@ Windows 下 faiss-cpu 建议用清华镜像：
 |------|------|------|
 | GET | / | 根路由，返回欢迎信息 |
 | GET | /status | 查询知识库索引状态 |
-| POST | /upload | 上传文档（PDF/TXT，MD5 判重） |
-| POST | /chat | RAG 问答（返回 answer + sources） |
-| POST | /chat/agent | Agent 问答（返回 answer + tool_calls + iterations） |
-| POST | /admin/reset | 重置知识库（all / 2h / 12h / 24h） |
+| POST | /auth/login | 登录，返回 token（无需认证） |
+| POST | /auth/register | 注册新用户（默认 user 角色，无需认证） |
+| POST | /upload | 上传文档（PDF/TXT，MD5 判重，需 admin） |
+| POST | /chat | RAG 问答（返回 answer + sources，需登录） |
+| POST | /chat/agent | Agent 问答（返回 answer + tool_calls + iterations，需登录） |
+| POST | /admin/reset | 重置知识库（all / 2h / 12h / 24h，需 admin） |
 
 
 ## 六、使用示例
 
-上传文档：
+登录（默认账号 admin / admin123，拿 token）：
 
-    curl -F "file=@./data/中华人民共和国2024年国民经济和社会发展统计公报.pdf" http://127.0.0.1:8000/upload
+    curl -X POST http://127.0.0.1:8000/auth/login -H "Content-Type: application/json" -d '{"username": "admin", "password": "admin123"}'
 
-RAG 问答：
+上传文档（需 admin，请求头带 token）：
 
-    curl -X POST http://127.0.0.1:8000/chat -H "Content-Type: application/json" -d '{"query": "2024年GDP是多少？"}'
+    curl -F "file=@./data/中华人民共和国2024年国民经济和社会发展统计公报.pdf" -H "Authorization: Bearer <token>" http://127.0.0.1:8000/upload
 
-Agent 问答（自主决定查文档还是查库）：
+RAG 问答（需登录）：
 
-    curl -X POST http://127.0.0.1:8000/chat/agent -H "Content-Type: application/json" -d '{"query": "最近上传了几个文件？"}'
+    curl -X POST http://127.0.0.1:8000/chat -H "Content-Type: application/json" -H "Authorization: Bearer <token>" -d '{"query": "2024年GDP是多少？"}'
+
+Agent 问答（需登录，自主决定查文档还是查库）：
+
+    curl -X POST http://127.0.0.1:8000/chat/agent -H "Content-Type: application/json" -H "Authorization: Bearer <token>" -d '{"query": "最近上传了几个文件？"}'
 
 
 ## 七、冒烟测试
@@ -193,4 +207,4 @@ flowchart LR
 | V0.1 | 命令行 RAG 最小闭环（切片 → Embedding → FAISS → LLM 问答） | ✅ 已完成 |
 | V0.2 | FastAPI 后端（upload / chat / admin / status / MD5 判重） | ✅ 已完成 |
 | V0.3 | Agent（Function Calling，knowledge_search + sql_query） | ✅ 已完成 |
-| V0.4 | 工程化（前端、引用来源、MySQL 已完成；Docker / 权限进行中） | 🚧 进行中 |
+| V0.4 | 工程化（前端、引用来源、MySQL、Docker、权限） | ✅ 已完成 |
