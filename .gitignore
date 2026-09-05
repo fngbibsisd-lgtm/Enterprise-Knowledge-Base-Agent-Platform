@@ -1,0 +1,33 @@
+# ===== 环境变量（含 API Key，绝不提交）=====
+.env
+
+# ===== Python =====
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+.eggs/
+*.egg-info/
+
+# ===== 数据库与运行时产物 =====
+chat.db
+faiss_data/
+rag_demo/faiss_index
+rag_demo/chunks.pkl
+
+# ===== 上传/测试文档（大文件，且可能含版权）=====
+data/
+
+# ===== IDE =====
+.idea/
+.vscode/
+*.iml
+
+# ===== 本地配置与调试日志 =====
+.claude/
+my log/
+
+# ===== 本地开发日志（不公开）=====
+PLAN.md
+PROCESS.md

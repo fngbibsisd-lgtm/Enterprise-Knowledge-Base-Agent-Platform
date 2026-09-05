@@ -1,0 +1,22 @@
+# ===== Version 0.1 最小依赖 =====
+# 按需取消注释
+
+# ---- 文档处理 ----
+# PyPDF2              # PDF 读取（轻量）
+# pdfplumber          # PDF 读取（更准，但更重）
+# python-docx         # Word 文档读取
+# markdown            # Markdown 读取
+
+# ---- LLM + Embedding ----
+openai>=1.0.0         # 兼容 OpenAI / DeepSeek / Qwen API
+
+# ---- 向量库 ----
+# faiss-cpu           # FAISS CPU 版本
+# numpy               # FAISS 依赖
+
+# ---- LlamaIndex（可选，简化开发）----
+# llama-index>=0.10.0
+# llama-index-readers-file  # SimpleDirectoryReader
+
+# ---- 环境变量 ----
+# python-dotenv       # 从 .env 文件加载配置
