@@ -79,9 +79,9 @@ async def amain() -> int:
         st["hit5"] += int(hit5)
         st["hit8"] += int(hit8)
 
-        yt = "—" if year_ok is None else ("✓" if year_ok else "✗")
-        print(f"{typ:<12} {'✓' if hit8 else '✗':<6} {'✓' if hit5 else '✗':<9} "
-              f"{'✓' if hit8 else '✗':<9} {yt:<6} {lat:>6.0f}   {p['query'][:38]}")
+        yt = "-" if year_ok is None else ("Y" if year_ok else "N")
+        print(f"{typ:<12} {'Y' if hit8 else 'N':<6} {'Y' if hit5 else 'N':<9} "
+              f"{'Y' if hit8 else 'N':<9} {yt:<6} {lat:>6.0f}   {p['query'][:38]}")
 
     avg_lat = sum(latencies) / len(latencies) if latencies else 0
     print("\n" + "=" * 60)

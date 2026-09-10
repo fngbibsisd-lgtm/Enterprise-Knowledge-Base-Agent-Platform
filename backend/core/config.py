@@ -41,7 +41,7 @@ class Settings(BaseSettings):
     upload_dir: str = "./data/uploads"
 
     # ===== Milvus 向量库 =====
-    milvus_uri: str = "./milvus.db"          # Milvus Lite 本地文件；standalone 用 http://localhost:19530
+    milvus_db_uri: str = "./milvus.db"       # Milvus Lite 本地文件；standalone 用 http://localhost:19530
     milvus_collection: str = "knowledge_chunks"
     embedding_dim: int = 4096
 

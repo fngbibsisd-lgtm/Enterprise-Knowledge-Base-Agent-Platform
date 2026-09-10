@@ -38,7 +38,7 @@ def _ensure_collection_sync(client: MilvusClient, settings: Settings) -> None:
 
 
 async def ensure_collection(settings: Settings) -> None:
-    client = _client(settings.milvus_uri)
+    client = _client(settings.milvus_db_uri)
     await asyncio.to_thread(_ensure_collection_sync, client, settings)
 
 
@@ -46,7 +46,7 @@ async def add_chunks(chunks: list[dict], settings: Settings) -> int:
     """chunks: [{text(含【来源】前缀), source}]，先向量化再入库，返回新增数。"""
     if not chunks:
         return 0
-    client = _client(settings.milvus_uri)
+    client = _client(settings.milvus_db_uri)
     await asyncio.to_thread(_ensure_collection_sync, client, settings)
     texts = [c["text"] for c in chunks]
     vectors = await embed_texts(texts, settings)
@@ -63,7 +63,7 @@ async def add_chunks(chunks: list[dict], settings: Settings) -> int:
 
 async def search_by_vector(query_vec: list[float], top_k: int, settings: Settings) -> list[tuple[int, float]]:
     """向量检索，返回 [(id, score)]，按 score 降序（COSINE 越高越相似）。"""
-    client = _client(settings.milvus_uri)
+    client = _client(settings.milvus_db_uri)
 
     def _search() -> list[tuple[int, float]]:
         res = client.search(
@@ -78,7 +78,7 @@ async def search_by_vector(query_vec: list[float], top_k: int, settings: Setting
 
 async def get_all_chunks(settings: Settings) -> list[dict]:
     """返回所有 [{id, text, source}]（分页取全量，供 BM25 与去重使用）。"""
-    client = _client(settings.milvus_uri)
+    client = _client(settings.milvus_db_uri)
 
     def _fetch() -> list[dict]:
         result: list[dict] = []
@@ -110,7 +110,7 @@ async def delete_by_sources(sources: set[str], settings: Settings) -> int:
     """删除 source 属于指定集合的行，返回删除数。"""
     if not sources:
         return 0
-    client = _client(settings.milvus_uri)
+    client = _client(settings.milvus_db_uri)
     if not client.has_collection(settings.milvus_collection):
         return 0
 
@@ -130,14 +130,14 @@ async def delete_by_sources(sources: set[str], settings: Settings) -> int:
 
 async def clear(settings: Settings) -> int:
     """清空 collection，返回清空前行数。"""
-    client = _client(settings.milvus_uri)
+    client = _client(settings.milvus_db_uri)
     n = await count(settings)
     await asyncio.to_thread(client.drop_collection, settings.milvus_collection)
     return n
 
 
 async def count(settings: Settings) -> int:
-    client = _client(settings.milvus_uri)
+    client = _client(settings.milvus_db_uri)
 
     def _count() -> int:
         if not client.has_collection(settings.milvus_collection):
