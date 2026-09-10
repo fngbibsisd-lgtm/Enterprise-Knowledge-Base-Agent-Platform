@@ -11,7 +11,6 @@ from backend.core.config import get_settings
 from backend.db.base import Base
 from backend import models  # noqa: F401  确保 ORM 模型注册到 metadata
 
-# Alembic Config 对象
 config = context.config
 
 # 从 Settings 读取数据库 URL，覆盖 alembic.ini 里的占位符

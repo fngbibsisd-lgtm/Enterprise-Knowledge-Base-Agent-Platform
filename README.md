@@ -59,7 +59,6 @@ agent/
 │   ├── src/views/         LoginView / ChatView
 │   └── src/components/    SideBar / MessageItem
 ├── eval/                  评测集 + 脚本（download_docs / build_index / evaluate_retrieval）
-├── rag_demo/              V0.1 命令行 RAG（历史遗留，backend 已不依赖）
 ├── test_backend.py        接口冒烟测试
 └── docker-compose.yml     Docker 部署（backend + mysql + milvus + nginx）
 ```

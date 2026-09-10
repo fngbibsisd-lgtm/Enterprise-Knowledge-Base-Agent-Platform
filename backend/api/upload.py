@@ -44,7 +44,6 @@ async def upload_file(
     if await repo.exists_by_md5(file_md5):
         raise HTTPException(status_code=409, detail="存在相同文档")
 
-    # 保存到 upload_dir 和 data_dir
     for path in (
         os.path.join(settings.upload_dir, filename),
         os.path.join(settings.data_dir, filename),
