@@ -15,6 +15,7 @@ chat.db
 faiss_data/
 rag_demo/faiss_index
 rag_demo/chunks.pkl
+milvus.db
 
 # ===== 上传/测试文档（大文件，且可能含版权）=====
 data/

@@ -1,9 +1,16 @@
 fastapi
 uvicorn[standard]
 openai
-faiss-cpu
 numpy
 PyPDF2
 python-multipart
 python-dotenv
-pymysql
+
+# ===== V2 主流架构 =====
+sqlalchemy[asyncio]>=2.0
+asyncmy
+alembic
+pyjwt
+pydantic-settings
+pymilvus>=2.5
+milvus-lite

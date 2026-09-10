@@ -6,11 +6,12 @@
 
 指标：
     - Recall@5 / Recall@8 ：标准答案文档是否进入 top-5 / top-8
-    - 年份过滤准确率      ：带 expected_year 的题，返回来源是否全部为正确年份（无串味）
+    - 年份 Top-1 命中率   ：带 expected_year 的题，top-1 是否含正确年份
     - 平均检索延迟        ：每次 rag.search() 耗时（含 query 向量化）
 
 前置：已运行 eval/build_index.py 建好索引。
 """
+import asyncio
 import json
 import os
 import sys
@@ -18,7 +19,7 @@ import time
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from backend.config import Config
+from backend.core.config import get_settings
 from backend.services import rag
 
 QA_FILE = os.path.join(os.path.dirname(__file__), "qa_pairs.json")
@@ -29,19 +30,18 @@ def hit(source: str, keywords: list[str]) -> bool:
     return any(k in source for k in keywords)
 
 
-def main() -> int:
-    config = Config()
+async def amain() -> int:
+    settings = get_settings()
     with open(QA_FILE, encoding="utf-8") as f:
         pairs = json.load(f)
 
-    # 汇总统计
     total = len(pairs)
     recall5 = recall8 = 0
     year_total = year_correct = 0
     latencies: list[float] = []
     by_type: dict[str, dict] = {}
 
-    print(f"评测题库: {total} 题，索引 top_k={config.top_k}\n")
+    print(f"评测题库: {total} 题，索引 top_k={settings.top_k}\n")
     print(f"{'题型':<12} {'状态':<6} {'Recall@5':<9} {'Recall@8':<9} {'年份':<6} {'延迟ms':<8}  题目")
 
     for p in pairs:
@@ -50,7 +50,7 @@ def main() -> int:
         exp_year = p.get("expected_year")
 
         t0 = time.time()
-        sources = rag.search(p["query"], config)
+        sources = await rag.search(p["query"], settings)
         lat = (time.time() - t0) * 1000
         latencies.append(lat)
 
@@ -59,7 +59,6 @@ def main() -> int:
         hit5 = any(hit(s["source"], golds) for s in top5)
         hit8 = any(hit(s["source"], golds) for s in top8)
 
-        # 年份 Top-1 命中：带 expected_year 且返回非空时，top-1 是否含正确年份
         year_ok = None
         if exp_year is not None:
             year_total += 1
@@ -99,6 +98,10 @@ def main() -> int:
         print(f"  {typ:<12} {st['hit8']}/{st['total']} = {r:.1f}%")
 
     return 0
+
+
+def main() -> int:
+    return asyncio.run(amain())
 
 
 if __name__ == "__main__":
