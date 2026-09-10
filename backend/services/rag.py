@@ -24,6 +24,7 @@ if RAG_DEMO_DIR not in sys.path:
 from backend.config import Config
 from rag_demo.document import chunk_documents
 from rag_demo.vector_store import embed_texts
+from backend.services.bm25 import BM25Index, rrf_fuse
 
 # ========== 索引构建 ==========
 
@@ -143,11 +144,24 @@ def search(query: str, config: Config) -> list[dict]:
     # 年份过滤需在更大候选集上做：各年份公报正文雷同，正确年份常排不进 top_k
     years=re.findall(r'20\d{2}',query)
     search_k=index.ntotal if years else config.top_k
+
+    # ---- 向量检索 ----
     scores,indic=index.search(query_vec, search_k)
+    vector_ranked=[int(i) for i in indic[0] if 0<=i<len(chunks)]
+    vector_scores={int(i):float(s) for s,i in zip(scores[0],indic[0]) if 0<=i<len(chunks)}
+
+    # ---- BM25 关键词检索 ----
+    corpus=[c.get("text","") if isinstance(c,dict) else str(c) for c in chunks]
+    bm25=BM25Index(corpus)
+    bm25_ranked=[idx for idx,_ in bm25.search(query,k=search_k)]
+
+    # ---- RRF 融合（向量 + BM25） ----
+    fused=rrf_fuse(vector_ranked,bm25_ranked)
+
+    # ---- 按融合顺序构建结果（按文档去重，避免大文件多 chunk 霸榜） ----
     results=[]
-    for score ,idx in zip(scores[0],indic[0]):
-        if idx<0 or idx>=len(chunks):
-            continue
+    seen_sources=set()
+    for idx in fused:
         chunk=chunks[idx]
         if isinstance(chunk, dict):
             text=chunk.get("text","")
@@ -158,14 +172,21 @@ def search(query: str, config: Config) -> list[dict]:
         text=text.strip()
         if not text:
             continue
-        results.append({"source":source,"text":text,"preview":text[:100],"score":float(score)})
-    #根据年份过滤（在检索全量候选后）
+        if source in seen_sources:
+            continue
+        seen_sources.add(source)
+        results.append({
+            "source":source,
+            "text":text,
+            "preview":text[:100],
+            "score":vector_scores.get(idx,0.0),
+        })
+    # 年份软排序：query 含年份时，把文件名含该年份的文档排到前面（不硬过滤，
+    # 避免把「目标年份」如 2030/2035 误当文档年份而误伤「十五五」类规划文档）。
+    # Python sort 稳定，含年份的文档内部仍保持 RRF 融合顺序。
+    results=results[:config.top_k]
     if years:
-        filtered=[r for r in results if any(y in r.get("source","") for y in years)]
-        if not filtered:
-            # 明确指定年份却一条都没命中 → 返回空，让 LLM 如实告知"没有该年份资料"
-            return []
-        results=filtered[:config.top_k]
+        results.sort(key=lambda r: 0 if any(y in r.get("source","") for y in years) else 1)
     # 终端日志：显示最终检索结果
     print(f"\n[检索] query=\"{query[:50]}...\" 共 {len(results)} 条:")
     for i, r in enumerate(results, 1):

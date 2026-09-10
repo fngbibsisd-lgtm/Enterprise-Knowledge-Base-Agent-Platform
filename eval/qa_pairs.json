@@ -1,0 +1,182 @@
+[
+  {
+    "type": "数字精确",
+    "query": "到2030年，人均体育场地面积要达到多少平方米？",
+    "gold_keywords": ["全民健身计划"],
+    "expected_year": null
+  },
+  {
+    "type": "数字精确",
+    "query": "到2030年，知识产权强国建设要取得什么样的进展？",
+    "gold_keywords": ["知识产权保护和运用"],
+    "expected_year": null
+  },
+  {
+    "type": "数字精确",
+    "query": "十四五时期，常住人口城镇化率的目标是多少？",
+    "gold_keywords": ["第十四个五年规划"],
+    "expected_year": null
+  },
+  {
+    "type": "数字精确",
+    "query": "全民健身计划要求中小学生每天综合体育活动时间不低于多少？",
+    "gold_keywords": ["全民健身计划"],
+    "expected_year": null
+  },
+  {
+    "type": "数字精确",
+    "query": "十四五规划提出全社会研发经费投入年均增长多少？",
+    "gold_keywords": ["第十四个五年规划"],
+    "expected_year": null
+  },
+  {
+    "type": "数字精确",
+    "query": "十三五时期，我国农村贫困人口脱贫人数是多少？",
+    "gold_keywords": ["第十四个五年规划"],
+    "expected_year": null
+  },
+  {
+    "type": "数字精确",
+    "query": "到2035年，我国知识产权综合竞争力的目标是什么？",
+    "gold_keywords": ["知识产权保护和运用"],
+    "expected_year": null
+  },
+  {
+    "type": "数字精确",
+    "query": "全民健身计划中每千人拥有社会体育指导员的目标是多少名？",
+    "gold_keywords": ["全民健身计划"],
+    "expected_year": null
+  },
+  {
+    "type": "主题语义",
+    "query": "国家如何保护专利权人的合法权益、打击侵权假冒行为？",
+    "gold_keywords": ["知识产权保护和运用"],
+    "expected_year": null
+  },
+  {
+    "type": "主题语义",
+    "query": "老百姓身边的健身场地设施应该如何建设？",
+    "gold_keywords": ["全民健身计划"],
+    "expected_year": null
+  },
+  {
+    "type": "主题语义",
+    "query": "如何推动高校和科研机构的科技成果转化为现实生产力？",
+    "gold_keywords": ["知识产权保护和运用"],
+    "expected_year": null
+  },
+  {
+    "type": "主题语义",
+    "query": "数字化发展和数字经济建设方面国家有什么部署？",
+    "gold_keywords": ["第十四个五年规划"],
+    "expected_year": null
+  },
+  {
+    "type": "主题语义",
+    "query": "商标品牌建设有哪些举措来培育知名品牌？",
+    "gold_keywords": ["知识产权保护和运用"],
+    "expected_year": null
+  },
+  {
+    "type": "主题语义",
+    "query": "冰雪运动如何在全国普及推广？",
+    "gold_keywords": ["全民健身计划"],
+    "expected_year": null
+  },
+  {
+    "type": "主题语义",
+    "query": "人工智能如何在体育健身领域应用？",
+    "gold_keywords": ["全民健身计划"],
+    "expected_year": null
+  },
+  {
+    "type": "五年规划区分",
+    "query": "十五五规划纲要的总体部署是什么？",
+    "gold_keywords": ["第十五个五年规划"],
+    "expected_year": null
+  },
+  {
+    "type": "五年规划区分",
+    "query": "十三五规划纲要主要讲了哪些内容？",
+    "gold_keywords": ["第十三个五年规划"],
+    "expected_year": null
+  },
+  {
+    "type": "五年规划区分",
+    "query": "十二五规划纲要的内容是什么？",
+    "gold_keywords": ["第十二个五年规划"],
+    "expected_year": null
+  },
+  {
+    "type": "五年规划区分",
+    "query": "十一五规划纲要的重点有哪些？",
+    "gold_keywords": ["第十一个五年规划"],
+    "expected_year": null
+  },
+  {
+    "type": "五年规划区分",
+    "query": "十五计划纲要的主要内容？",
+    "gold_keywords": ["第十个五年计划"],
+    "expected_year": null
+  },
+  {
+    "type": "政府信息公开",
+    "query": "政府信息公开条例规定了哪些内容？",
+    "gold_keywords": ["政府信息公开条例"],
+    "expected_year": null
+  },
+  {
+    "type": "政府信息公开",
+    "query": "政府信息公开信息处理费如何收取？",
+    "gold_keywords": ["信息处理费"],
+    "expected_year": null
+  },
+  {
+    "type": "政府信息公开",
+    "query": "政府信息公开行政复议案件应当如何处理？",
+    "gold_keywords": ["行政复议"],
+    "expected_year": null
+  },
+  {
+    "type": "政府信息公开",
+    "query": "政府信息公开工作年度报告格式有什么要求？",
+    "gold_keywords": ["年度报告格式"],
+    "expected_year": null
+  },
+  {
+    "type": "政府信息公开",
+    "query": "规章集中公开和动态更新工作有什么要求？",
+    "gold_keywords": ["规章集中公开"],
+    "expected_year": null
+  },
+  {
+    "type": "年份区分",
+    "query": "2024年国家公务员局的政府信息公开工作情况如何？",
+    "gold_keywords": ["国家公务员局2024"],
+    "expected_year": "2024"
+  },
+  {
+    "type": "年份区分",
+    "query": "2023年国家公务员局的政府信息公开情况？",
+    "gold_keywords": ["国家公务员局2023"],
+    "expected_year": "2023"
+  },
+  {
+    "type": "年份区分",
+    "query": "2020年国家公务员局的政府信息公开情况？",
+    "gold_keywords": ["国家公务员局2020"],
+    "expected_year": "2020"
+  },
+  {
+    "type": "年份区分",
+    "query": "2019年国家新闻出版署的政府信息公开情况？",
+    "gold_keywords": ["国家新闻出版署"],
+    "expected_year": "2019"
+  },
+  {
+    "type": "年份区分",
+    "query": "2021年国家公务员局的政府信息公开情况？",
+    "gold_keywords": ["国家公务员局2021"],
+    "expected_year": "2021"
+  }
+]
