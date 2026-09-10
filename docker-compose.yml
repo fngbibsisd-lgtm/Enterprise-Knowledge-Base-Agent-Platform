@@ -14,12 +14,36 @@ services:
       timeout: 5s
       retries: 10
 
+  # Milvus standalone（嵌入式 etcd + 本地存储，单容器）
+  # 注：镜像版本与嵌入式环境变量需在真实 Docker 环境验证后微调
+  milvus:
+    image: milvusdb/milvus:v2.5.0
+    command: ["milvus", "run", "standalone"]
+    environment:
+      ETCD_USE_EMBED: "true"
+      ETCD_DATA_DIR: /var/lib/milvus/etcd
+      COMMON_STORAGETYPE: local
+    ports:
+      - "19530:19530"
+      - "9091:9091"
+    volumes:
+      - milvus_data:/var/lib/milvus
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9091/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
   backend:
-    build: .
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     ports:
       - "8000:8000"
     depends_on:
       mysql:
+        condition: service_healthy
+      milvus:
         condition: service_healthy
     environment:
       MYSQL_HOST: mysql
@@ -27,13 +51,22 @@ services:
       MYSQL_USER: root
       MYSQL_PASSWORD: "${MYSQL_PASSWORD:-root}"
       MYSQL_DATABASE: rag_agent
+      MILVUS_DB_URI: "http://milvus:19530"
       ADMIN_USERNAME: "${ADMIN_USERNAME:-admin}"
       ADMIN_PASSWORD: "${ADMIN_PASSWORD:-admin123}"
+      JWT_SECRET: "${JWT_SECRET:-dev-secret-change-me-0123456789abcdef}"
     env_file:
-      - backend/.env
-    volumes:
-      - ./data:/app/data
-      - ./faiss_data:/app/faiss_data
+      - backend/.env   # LLM_API_KEY / EMBEDDING_API_KEY 等
+
+  frontend:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
 
 volumes:
   mysql_data:
+  milvus_data:
