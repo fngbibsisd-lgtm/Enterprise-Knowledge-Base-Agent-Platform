@@ -17,7 +17,10 @@ import os
 import sys
 import time
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+# 项目根目录：加入 sys.path 并 chdir 过去，保证 ./milvus.db 相对路径解析正确（无论从哪里运行）
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, PROJECT_ROOT)
+os.chdir(PROJECT_ROOT)
 
 from backend.core.config import get_settings
 from backend.services import rag
@@ -31,7 +34,9 @@ def hit(source: str, keywords: list[str]) -> bool:
 
 
 async def amain() -> int:
-    settings = get_settings()
+    _settings = get_settings()
+    # 检索评测读独立 collection，与生产上传文件索引隔离
+    settings = _settings.model_copy(update={"milvus_collection": _settings.milvus_collection_eval})
     with open(QA_FILE, encoding="utf-8") as f:
         pairs = json.load(f)
 

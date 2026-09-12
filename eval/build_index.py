@@ -9,7 +9,10 @@ import glob
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+# 项目根目录：加入 sys.path 并 chdir 过去，保证 ./milvus.db / ./data 相对路径解析正确（无论从哪里运行）
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, PROJECT_ROOT)
+os.chdir(PROJECT_ROOT)
 
 from backend.core.config import get_settings
 from backend.services import rag
@@ -18,7 +21,9 @@ DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 
 
 async def amain() -> int:
-    settings = get_settings()
+    _settings = get_settings()
+    # 评测语料写入独立 collection，避免和生产上传文件混在同一个索引里
+    settings = _settings.model_copy(update={"milvus_collection": _settings.milvus_collection_eval})
     files = sorted(glob.glob(os.path.join(DATA_DIR, "*.txt")))
     if not files:
         print("eval/data/ 下没有 .txt 文件，请先运行 eval/download_docs.py")
@@ -40,7 +45,7 @@ async def amain() -> int:
     status = await rag.get_index_status(settings)
     print("=" * 60)
     print(f"  本次新增 chunks: {total_chunks}")
-    print(f"  索引状态: indexed={status['indexed']}  total_chunks={status['total_chunks']}")
+    print(f"  评测索引状态(collection={settings.milvus_collection}): indexed={status['indexed']}  total_chunks={status['total_chunks']}")
     return 0
 
 

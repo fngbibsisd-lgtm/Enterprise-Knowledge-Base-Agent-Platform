@@ -1,0 +1,352 @@
+[
+  {
+    "type": "文档问答",
+    "query": "十四五时期，常住人口城镇化率的目标是多少？",
+    "expected_tools": [
+      "knowledge_search"
+    ],
+    "gold_keywords": [
+      "第十四个五年规划"
+    ]
+  },
+  {
+    "type": "文档问答",
+    "query": "到2030年，人均体育场地面积要达到多少平方米？",
+    "expected_tools": [
+      "knowledge_search"
+    ],
+    "gold_keywords": [
+      "全民健身计划"
+    ]
+  },
+  {
+    "type": "文档问答",
+    "query": "国家如何保护专利权人的合法权益、打击侵权假冒行为？",
+    "expected_tools": [
+      "knowledge_search"
+    ],
+    "gold_keywords": [
+      "知识产权保护和运用"
+    ]
+  },
+  {
+    "type": "文档问答",
+    "query": "十五五规划纲要的总体部署是什么？",
+    "expected_tools": [
+      "knowledge_search"
+    ],
+    "gold_keywords": [
+      "第十五个五年规划"
+    ]
+  },
+  {
+    "type": "文档问答",
+    "query": "2023年国家公务员局的政府信息公开情况？",
+    "expected_tools": [
+      "knowledge_search"
+    ],
+    "gold_keywords": [
+      "国家公务员局2023"
+    ]
+  },
+  {
+    "type": "文档问答",
+    "query": "政府信息公开条例规定了哪些内容？",
+    "expected_tools": [
+      "knowledge_search"
+    ],
+    "gold_keywords": [
+      "政府信息公开条例"
+    ]
+  },
+  {
+    "type": "统计问答",
+    "query": "最近上传了几个文件？",
+    "expected_tools": [
+      "sql_query"
+    ],
+    "gold_keywords": []
+  },
+  {
+    "type": "统计问答",
+    "query": "数据库里现在一共有多少条聊天记录？",
+    "expected_tools": [
+      "sql_query"
+    ],
+    "gold_keywords": []
+  },
+  {
+    "type": "结构自省",
+    "query": "数据库里有哪些表？每张表分别有哪些字段？",
+    "expected_tools": [
+      "list_tables"
+    ],
+    "gold_keywords": []
+  },
+  {
+    "type": "拒答",
+    "query": "我们公司食堂今天中午吃什么？",
+    "expected_tools": [],
+    "gold_keywords": []
+  },
+  {
+    "type": "拒答",
+    "query": "下周一A股大盘会涨还是跌？",
+    "expected_tools": [],
+    "gold_keywords": []
+  },
+  {
+    "type": "文档问答",
+    "query": "十五五时期，地级及以上城市细颗粒物（PM2.5）浓度降至多少微克/立方米？",
+    "expected_tools": [
+      "knowledge_search"
+    ],
+    "gold_keywords": [
+      "第十五个五年规划"
+    ]
+  },
+  {
+    "type": "文档问答",
+    "query": "十二五规划中，化学需氧量和二氧化硫排放量要求分别减少多少？",
+    "expected_tools": [
+      "knowledge_search"
+    ],
+    "gold_keywords": [
+      "第十二个五年规划"
+    ]
+  },
+  {
+    "type": "文档问答",
+    "query": "在慢性病防治方面，十五五规划提出了哪些具体举措来推动全链条服务和多病同防同治同管？",
+    "expected_tools": [
+      "knowledge_search"
+    ],
+    "gold_keywords": [
+      "国民健康"
+    ]
+  },
+  {
+    "type": "文档问答",
+    "query": "十五五规划实施过程中，哪个部门要加强统筹协调并开展动态监测评估？",
+    "expected_tools": [
+      "knowledge_search"
+    ],
+    "gold_keywords": [
+      "中医药振兴"
+    ]
+  },
+  {
+    "type": "文档问答",
+    "query": "国务院关于特殊教育发展提升十五五行动计划的批复文号是什么？",
+    "expected_tools": [
+      "knowledge_search"
+    ],
+    "gold_keywords": [
+      "特殊教育"
+    ]
+  },
+  {
+    "type": "文档问答",
+    "query": "在扩大消费相关举措中，支持哪些文化业态和品牌发展，鼓励开发哪些文化产品？",
+    "expected_tools": [
+      "knowledge_search"
+    ],
+    "gold_keywords": [
+      "扩大消费"
+    ]
+  },
+  {
+    "type": "文档问答",
+    "query": "《关于可否采用到付方式送达政府信息公开答复的函》的发文字号是什么？",
+    "expected_tools": [
+      "knowledge_search"
+    ],
+    "gold_keywords": [
+      "送达"
+    ]
+  },
+  {
+    "type": "文档问答",
+    "query": "2025年10月，国家公务员局发布了多少份关于公务员招录和遴选的公告？",
+    "expected_tools": [
+      "knowledge_search"
+    ],
+    "gold_keywords": [
+      "国家公务员局2025"
+    ]
+  },
+  {
+    "type": "文档问答",
+    "query": "2019年国家电影局贯彻了党的哪几次中央全会精神？",
+    "expected_tools": [
+      "knowledge_search"
+    ],
+    "gold_keywords": [
+      "国家电影局"
+    ]
+  },
+  {
+    "type": "统计问答",
+    "query": "知识库里一共索引了多少个文本块？",
+    "expected_tools": [
+      "sql_query"
+    ],
+    "gold_keywords": []
+  },
+  {
+    "type": "统计问答",
+    "query": "系统里目前有几个用户账号？分别是什么角色？",
+    "expected_tools": [
+      "sql_query"
+    ],
+    "gold_keywords": []
+  },
+  {
+    "type": "统计问答",
+    "query": "最近一次上传文件是什么时候？",
+    "expected_tools": [
+      "sql_query"
+    ],
+    "gold_keywords": []
+  },
+  {
+    "type": "统计问答",
+    "query": "目前一共有多少个对话会话？",
+    "expected_tools": [
+      "sql_query"
+    ],
+    "gold_keywords": []
+  },
+  {
+    "type": "统计问答",
+    "query": "用户问过的所有问题里，字符数最多的是哪一条？",
+    "expected_tools": [
+      "sql_query"
+    ],
+    "gold_keywords": []
+  },
+  {
+    "type": "结构自省",
+    "query": "系统里记录了哪些类型的数据？分别存在哪些表、有哪些字段？",
+    "expected_tools": [
+      "list_tables"
+    ],
+    "gold_keywords": []
+  },
+  {
+    "type": "结构自省",
+    "query": "用户和他的对话记录之间是怎么关联的？",
+    "expected_tools": [
+      "list_tables"
+    ],
+    "gold_keywords": []
+  },
+  {
+    "type": "拒答",
+    "query": "明天北京的天气怎么样？",
+    "expected_tools": [],
+    "gold_keywords": []
+  },
+  {
+    "type": "拒答",
+    "query": "帮我写一首关于春天的诗",
+    "expected_tools": [],
+    "gold_keywords": []
+  },
+  {
+    "type": "拒答",
+    "query": "我们公司CEO的电子邮箱是多少？",
+    "expected_tools": [],
+    "gold_keywords": []
+  },
+  {
+    "type": "拒答",
+    "query": "2030年世界杯冠军会是哪个国家？",
+    "expected_tools": [],
+    "gold_keywords": []
+  },
+  {
+    "type": "多工具协作",
+    "query": "知识库里现在有多少份文件？其中关于全民健身的那份讲了什么目标？",
+    "expected_tools": [
+      "knowledge_search",
+      "sql_query"
+    ],
+    "expected_all_tools": true,
+    "gold_keywords": [
+      "全民健身计划"
+    ]
+  },
+  {
+    "type": "多工具协作",
+    "query": "系统里有多少条问答记录？最新的政策文件里关于知识产权讲了什么？",
+    "expected_tools": [
+      "knowledge_search",
+      "sql_query"
+    ],
+    "expected_all_tools": true,
+    "gold_keywords": [
+      "知识产权保护和运用"
+    ]
+  },
+  {
+    "type": "多工具协作",
+    "query": "目前上传了几份文件？这些文件里十五五规划的主要指标是什么？",
+    "expected_tools": [
+      "knowledge_search",
+      "sql_query"
+    ],
+    "expected_all_tools": true,
+    "gold_keywords": [
+      "第十五个五年规划"
+    ]
+  },
+  {
+    "type": "工具链",
+    "query": "系统里的用户表有哪些字段？其中管理员角色有几个账号？",
+    "expected_tools": [
+      "list_tables",
+      "sql_query"
+    ],
+    "expected_all_tools": true,
+    "gold_keywords": []
+  },
+  {
+    "type": "工具链",
+    "query": "上传记录表有哪些字段？一共记录了多少个文本块？",
+    "expected_tools": [
+      "list_tables",
+      "sql_query"
+    ],
+    "expected_all_tools": true,
+    "gold_keywords": []
+  },
+  {
+    "type": "工具链",
+    "query": "对话相关的表有哪些？现在一共存了多少条消息？",
+    "expected_tools": [
+      "list_tables",
+      "sql_query"
+    ],
+    "expected_all_tools": true,
+    "gold_keywords": []
+  },
+  {
+    "type": "运行时状态",
+    "query": "现在的日期和时间是多少？",
+    "expected_tools": [
+      "get_current_time"
+    ],
+    "requires": "mcp",
+    "gold_keywords": []
+  },
+  {
+    "type": "运行时状态",
+    "query": "当前程序运行在什么操作系统上？工作目录是哪里？",
+    "expected_tools": [
+      "get_system_info"
+    ],
+    "requires": "mcp",
+    "gold_keywords": []
+  }
+]
