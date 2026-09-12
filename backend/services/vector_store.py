@@ -76,6 +76,31 @@ async def search_by_vector(query_vec: list[float], top_k: int, settings: Setting
     return await asyncio.to_thread(_search)
 
 
+async def get_chunks_by_source(source: str, settings: Settings) -> list[dict]:
+    """返回指定来源（文件名）的全部 chunk（分页取全量），供 get_document 工具用。"""
+    client = _client(settings.milvus_db_uri)
+
+    def _fetch() -> list[dict]:
+        result: list[dict] = []
+        offset = 0
+        page = 1000
+        while True:
+            rows = client.query(
+                settings.milvus_collection,
+                filter=f'source == "{source}"',
+                output_fields=["text", "source"],
+                offset=offset,
+                limit=page,
+            )
+            result.extend(rows)
+            if len(rows) < page:
+                break
+            offset += page
+        return result
+
+    return await asyncio.to_thread(_fetch)
+
+
 async def get_all_chunks(settings: Settings) -> list[dict]:
     """返回所有 [{id, text, source}]（分页取全量，供 BM25 与去重使用）。"""
     client = _client(settings.milvus_db_uri)
