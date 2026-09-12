@@ -1,824 +1,824 @@
 [
-  {
-    "type": "数字精确",
-    "query": "到2030年，人均体育场地面积要达到多少平方米？",
-    "gold_keywords": [
-      "全民健身计划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "数字精确",
-    "query": "到2030年，知识产权强国建设要取得什么样的进展？",
-    "gold_keywords": [
-      "知识产权保护和运用"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "数字精确",
-    "query": "十四五时期，常住人口城镇化率的目标是多少？",
-    "gold_keywords": [
-      "第十四个五年规划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "数字精确",
-    "query": "全民健身计划要求中小学生每天综合体育活动时间不低于多少？",
-    "gold_keywords": [
-      "全民健身计划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "数字精确",
-    "query": "十四五规划提出全社会研发经费投入年均增长多少？",
-    "gold_keywords": [
-      "第十四个五年规划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "数字精确",
-    "query": "十三五时期，我国农村贫困人口脱贫人数是多少？",
-    "gold_keywords": [
-      "第十四个五年规划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "数字精确",
-    "query": "到2035年，我国知识产权综合竞争力的目标是什么？",
-    "gold_keywords": [
-      "知识产权保护和运用"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "数字精确",
-    "query": "全民健身计划中每千人拥有社会体育指导员的目标是多少名？",
-    "gold_keywords": [
-      "全民健身计划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "主题语义",
-    "query": "国家如何保护专利权人的合法权益、打击侵权假冒行为？",
-    "gold_keywords": [
-      "知识产权保护和运用"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "主题语义",
-    "query": "老百姓身边的健身场地设施应该如何建设？",
-    "gold_keywords": [
-      "全民健身计划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "主题语义",
-    "query": "如何推动高校和科研机构的科技成果转化为现实生产力？",
-    "gold_keywords": [
-      "知识产权保护和运用"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "主题语义",
-    "query": "数字化发展和数字经济建设方面国家有什么部署？",
-    "gold_keywords": [
-      "第十四个五年规划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "主题语义",
-    "query": "商标品牌建设有哪些举措来培育知名品牌？",
-    "gold_keywords": [
-      "知识产权保护和运用"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "主题语义",
-    "query": "冰雪运动如何在全国普及推广？",
-    "gold_keywords": [
-      "全民健身计划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "主题语义",
-    "query": "人工智能如何在体育健身领域应用？",
-    "gold_keywords": [
-      "全民健身计划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "五年规划区分",
-    "query": "十五五规划纲要的总体部署是什么？",
-    "gold_keywords": [
-      "第十五个五年规划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "五年规划区分",
-    "query": "十三五规划纲要主要讲了哪些内容？",
-    "gold_keywords": [
-      "第十三个五年规划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "五年规划区分",
-    "query": "十二五规划纲要的内容是什么？",
-    "gold_keywords": [
-      "第十二个五年规划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "五年规划区分",
-    "query": "十一五规划纲要的重点有哪些？",
-    "gold_keywords": [
-      "第十一个五年规划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "五年规划区分",
-    "query": "十五计划纲要的主要内容？",
-    "gold_keywords": [
-      "第十个五年计划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "政府信息公开",
-    "query": "政府信息公开条例规定了哪些内容？",
-    "gold_keywords": [
-      "政府信息公开条例"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "政府信息公开",
-    "query": "政府信息公开信息处理费如何收取？",
-    "gold_keywords": [
-      "信息处理费"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "政府信息公开",
-    "query": "政府信息公开行政复议案件应当如何处理？",
-    "gold_keywords": [
-      "行政复议"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "政府信息公开",
-    "query": "政府信息公开工作年度报告格式有什么要求？",
-    "gold_keywords": [
-      "年度报告格式"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "政府信息公开",
-    "query": "规章集中公开和动态更新工作有什么要求？",
-    "gold_keywords": [
-      "规章集中公开"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "年份区分",
-    "query": "2024年国家公务员局的政府信息公开工作情况如何？",
-    "gold_keywords": [
-      "国家公务员局2024"
-    ],
-    "expected_year": "2024"
-  },
-  {
-    "type": "年份区分",
-    "query": "2023年国家公务员局的政府信息公开情况？",
-    "gold_keywords": [
-      "国家公务员局2023"
-    ],
-    "expected_year": "2023"
-  },
-  {
-    "type": "年份区分",
-    "query": "2020年国家公务员局的政府信息公开情况？",
-    "gold_keywords": [
-      "国家公务员局2020"
-    ],
-    "expected_year": "2020"
-  },
-  {
-    "type": "年份区分",
-    "query": "2019年国家新闻出版署的政府信息公开情况？",
-    "gold_keywords": [
-      "国家新闻出版署"
-    ],
-    "expected_year": "2019"
-  },
-  {
-    "type": "年份区分",
-    "query": "2021年国家公务员局的政府信息公开情况？",
-    "gold_keywords": [
-      "国家公务员局2021"
-    ],
-    "expected_year": "2021"
-  },
-  {
-    "type": "数字精确",
-    "query": "十五五时期，地级及以上城市细颗粒物（PM2.5）浓度降至多少微克/立方米？",
-    "gold_keywords": [
-      "第十五个五年规划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "数字精确",
-    "query": "十五五时期，森林覆盖率要达到多少？",
-    "gold_keywords": [
-      "第十五个五年规划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "数字精确",
-    "query": "十五五时期要深化第几代移动通信规模部署？",
-    "gold_keywords": [
-      "第十五个五年规划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "数字精确",
-    "query": "十五五时期，农作物耕种收综合机械化率要提高到多少以上？",
-    "gold_keywords": [
-      "第十五个五年规划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "数字精确",
-    "query": "脱贫攻坚战取得全面胜利后，有多少农村贫困人口实现了脱贫？",
-    "gold_keywords": [
-      "第十四个五年规划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "数字精确",
-    "query": "我国坚持最严格的耕地保护制度，严守多少亩耕地红线？",
-    "gold_keywords": [
-      "第十四个五年规划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "数字精确",
-    "query": "城区常住人口在多少万以下的城市将全面取消落户限制？",
-    "gold_keywords": [
-      "第十四个五年规划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "数字精确",
-    "query": "十一五规划期间，农村饮水安全工程要解决多少农村居民的水质不达标及局部地区严重缺水问题？",
-    "gold_keywords": [
-      "第十一个五年规划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "数字精确",
-    "query": "十一五规划中，超高压输变电设备要掌握多少千伏直流输变电关键设备制造技术？",
-    "gold_keywords": [
-      "第十一个五年规划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "数字精确",
-    "query": "十二五规划中，化学需氧量和二氧化硫排放量要求分别减少多少？",
-    "gold_keywords": [
-      "第十二个五年规划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "数字精确",
-    "query": "十二五规划提出粮食综合生产能力要达到多少吨以上？",
-    "gold_keywords": [
-      "第十二个五年规划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "数字精确",
-    "query": "十三五期间，人均国内生产总值增至多少元？",
-    "gold_keywords": [
-      "第十三个五年规划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "数字精确",
-    "query": "十三五期间，有多少比例的行政村实现光纤通达？",
-    "gold_keywords": [
-      "第十三个五年规划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "数字精确",
-    "query": "“十五”期间经济增长速度预期为年均多少？",
-    "gold_keywords": [
-      "第十个五年计划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "数字精确",
-    "query": "2005年第三产业从业人员占全社会从业人员的比重预期是多少？",
-    "gold_keywords": [
-      "第十个五年计划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "数字精确",
-    "query": "全民健身计划提出的人均体育场地面积目标是多少平方米左右？",
-    "gold_keywords": [
-      "全民健身计划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "数字精确",
-    "query": "中小学生每天综合体育活动时间不低于多少小时？",
-    "gold_keywords": [
-      "全民健身计划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "数字精确",
-    "query": "十五五规划提出到2030年人均预期寿命要达到多少岁？",
-    "gold_keywords": [
-      "国民健康"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "数字精确",
-    "query": "十五五规划提出要形成多少分钟基本医疗卫生服务圈？",
-    "gold_keywords": [
-      "国民健康"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "数字精确",
-    "query": "《扩大消费“十五五”规划》提出到2030年社会消费品零售总额要达到多少万亿元左右？",
-    "gold_keywords": [
-      "扩大消费"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "数字精确",
-    "query": "《扩大消费“十五五”规划》提出扩大数字产品消费时，要开展第几代智能网联汽车准入和上路通行试点？",
-    "gold_keywords": [
-      "扩大消费"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "主题语义",
-    "query": "在慢性病防治方面，十五五规划提出了哪些具体举措来推动全链条服务和多病同防同治同管？",
-    "gold_keywords": [
-      "国民健康"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "主题语义",
-    "query": "十五五规划对妇女健康服务有哪些部署，特别是在癌症筛查和疫苗接种方面？",
-    "gold_keywords": [
-      "国民健康"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "主题语义",
-    "query": "十五五规划提出发展哪些新型文化业态，并鼓励开发什么样的文化产品？",
-    "gold_keywords": [
-      "扩大消费"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "主题语义",
-    "query": "十五五规划在汽车消费领域提出了哪些促进全链条创新发展的措施？",
-    "gold_keywords": [
-      "扩大消费"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "主题语义",
-    "query": "各部门和单位在落实《行动计划》时，需要按照什么分工来推进工作？",
-    "gold_keywords": [
-      "特殊教育"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "主题语义",
-    "query": "十五五规划实施过程中，哪个部门要加强统筹协调并开展动态监测评估？",
-    "gold_keywords": [
-      "中医药振兴"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "五年规划区分",
-    "query": "「十五五」期间，我国绿色低碳转型和生态环境质量改善取得了哪些具体成效？",
-    "gold_keywords": [
-      "第十五个五年规划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "五年规划区分",
-    "query": "「十五五」时期，面对国际风云变幻和各种风险挑战，必须保持怎样的战略定力和精神状态来办好自己的事？",
-    "gold_keywords": [
-      "第十五个五年规划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "五年规划区分",
-    "query": "“十二五”规划是在胜利完成哪个五年规划确定的主要目标和任务的基础上编制的？",
-    "gold_keywords": [
-      "第十二个五年规划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "五年规划区分",
-    "query": "“十二五”时期，我国对国际国内形势作出的总体判断是什么？",
-    "gold_keywords": [
-      "第十二个五年规划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "五年规划区分",
-    "query": "“十二五”规划对化学需氧量和二氧化硫排放总量的减少目标分别是多少？",
-    "gold_keywords": [
-      "第十二个五年规划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "五年规划区分",
-    "query": "十三五时期，世界经济处于怎样的发展态势？",
-    "gold_keywords": [
-      "第十三个五年规划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "五年规划区分",
-    "query": "十三五期间，在哪些严重缺水区域实施专项节水行动计划？",
-    "gold_keywords": [
-      "第十三个五年规划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "五年规划区分",
-    "query": "「十一五」期间，大型乙烯成套设备方面要推进哪些设备的国产化？",
-    "gold_keywords": [
-      "第十一个五年规划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "五年规划区分",
-    "query": "「十一五」期间，洁净煤发电领域要建设单机多少万千瓦级的循环流化床电站？",
-    "gold_keywords": [
-      "第十一个五年规划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "五年规划区分",
-    "query": "十五计划指出，一些领域市场经济秩序相当混乱，还存在哪些比较严重的现象和作风问题？",
-    "gold_keywords": [
-      "第十个五年计划"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "相似文本",
-    "query": "国民健康“十五五”规划对适龄女童免费接种哪种疫苗作出安排？",
-    "gold_keywords": [
-      "国民健康"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "相似文本",
-    "query": "国民健康“十五五”规划鼓励二级及以上医疗机构设立哪些方面的特色门诊？",
-    "gold_keywords": [
-      "国民健康"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "相似文本",
-    "query": "在扩大消费相关举措中，支持哪些文化业态和品牌发展，鼓励开发哪些文化产品？",
-    "gold_keywords": [
-      "扩大消费"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "相似文本",
-    "query": "在扩大消费的部署中，汽车后市场消费包括哪些具体领域？",
-    "gold_keywords": [
-      "扩大消费"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "相似文本",
-    "query": "国务院关于特殊教育发展提升十五五行动计划的批复文号是什么？",
-    "gold_keywords": [
-      "特殊教育"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "相似文本",
-    "query": "国务院各有关部门和单位在落实特殊教育发展提升十五五行动计划时，需要怎样解决实施中遇到的问题？",
-    "gold_keywords": [
-      "特殊教育"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "相似文本",
-    "query": "国务院关于中医药振兴发展“十五五”规划的批复文号是多少？",
-    "gold_keywords": [
-      "中医药振兴"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "相似文本",
-    "query": "十五五规划实施过程中，由哪些部门负责加强统筹协调、开展动态监测和评估并及时研究解决问题？",
-    "gold_keywords": [
-      "中医药振兴"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "相似文本",
-    "query": "十五五规划提出要深入推进哪三类知识产权案件的“三合一”审判机制改革？",
-    "gold_keywords": [
-      "知识产权保护和运用"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "相似文本",
-    "query": "十五五规划对侵犯各种所有制经济知识产权的行为提出了怎样的追责原则，并要求防止和纠正什么？",
-    "gold_keywords": [
-      "知识产权保护和运用"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "政府信息公开",
-    "query": "《公共企事业单位信息公开规定制定办法》经国务院同意后，接下来需要做什么？",
-    "gold_keywords": [
-      "公共企事业单位"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "政府信息公开",
-    "query": "国务院有关主管部门制定或修订教育、卫生健康、供水、供电、供气、供热、环境保护、公共交通等领域的公共企事业单位信息公开规定，依据是什么？",
-    "gold_keywords": [
-      "公共企事业单位"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "政府信息公开",
-    "query": "《关于可否采用到付方式送达政府信息公开答复的函》的发文字号是什么？",
-    "gold_keywords": [
-      "送达"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "政府信息公开",
-    "query": "政府信息公开处理决定采取直接送达、委托其他行政机关代为送达等方式送达的，期限计算的时点是什么？",
-    "gold_keywords": [
-      "送达"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "政府信息公开",
-    "query": "行政复议机关作为共同被告的行政诉讼案件，主要案由是什么？",
-    "gold_keywords": [
-      "填报"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "政府信息公开",
-    "query": "办综函〔2017〕559号这份函件的完整名称是什么？",
-    "gold_keywords": [
-      "接收渠道"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "政府信息公开",
-    "query": "为便利申请人、提高工作效率，行政机关被鼓励结合自身实际开通哪些申请接收渠道？",
-    "gold_keywords": [
-      "接收渠道"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "政府信息公开",
-    "query": "省政府办公厅在法定期限内书面告知申请人、由省国土资源厅在法定期限内对申请人予以答复，法律上可以视为什么行为？",
-    "gold_keywords": [
-      "答复主体"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "政府信息公开",
-    "query": "不动产登记资料查询、户籍信息查询、工商登记资料查询这类事项，与《政府信息公开条例》调整的政府信息公开行为在哪些方面存在根本性差别？",
-    "gold_keywords": [
-      "业务查询"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "政府信息公开",
-    "query": "行政机关的职权发生变更后，原来由它承担的责任由谁承担？",
-    "gold_keywords": [
-      "机构改革"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "政府信息公开",
-    "query": "机构改革后，如果申请人向职权被划出的行政机关提交了政府信息公开申请，该行政机关可以怎么处理？",
-    "gold_keywords": [
-      "机构改革"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "政府信息公开",
-    "query": "政府信息公开平台除了是发布法定主动公开内容的公开平台外，还是什么平台？",
-    "gold_keywords": [
-      "公开平台"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "政府信息公开",
-    "query": "政府网站对类似“政府信息公开”的栏目但使用了其他名称的，应当如何处理？",
-    "gold_keywords": [
-      "公开平台"
-    ],
-    "expected_year": null
-  },
-  {
-    "type": "年份区分",
-    "query": "2019年国家公务员局有多少项行政许可和对外管理服务事项？",
-    "gold_keywords": [
-      "国家公务员局2019"
-    ],
-    "expected_year": 2019
-  },
-  {
-    "type": "年份区分",
-    "query": "2022年国家公务员局主动发布了多少类中央机关公务员考试录用、公开遴选和公开选调工作有关公告？",
-    "gold_keywords": [
-      "国家公务员局2022"
-    ],
-    "expected_year": 2022
-  },
-  {
-    "type": "年份区分",
-    "query": "国家公务员局在2022年12月共发布了几项关于2023年度公务员招录及遴选选调笔试时间安排的公告？",
-    "gold_keywords": [
-      "国家公务员局2022"
-    ],
-    "expected_year": 2022
-  },
-  {
-    "type": "年份区分",
-    "query": "2025年10月，国家公务员局发布了多少份关于公务员招录和遴选的公告？",
-    "gold_keywords": [
-      "国家公务员局2025"
-    ],
-    "expected_year": 2025
-  },
-  {
-    "type": "年份区分",
-    "query": "2025年国家公务员局因政府信息公开工作被申请行政复议多少件？",
-    "gold_keywords": [
-      "国家公务员局2025"
-    ],
-    "expected_year": 2025
-  },
-  {
-    "type": "年份区分",
-    "query": "2019年，国家新闻出版署（国家版权局）全面贯彻了党的哪几次全会精神？",
-    "gold_keywords": [
-      "国家新闻出版署"
-    ],
-    "expected_year": 2019
-  },
-  {
-    "type": "年份区分",
-    "query": "2019年，国家新闻出版署（国家版权局）全年公开行政规范性文件多少件？",
-    "gold_keywords": [
-      "国家新闻出版署"
-    ],
-    "expected_year": 2019
-  },
-  {
-    "type": "年份区分",
-    "query": "2019年国家电影局贯彻了党的哪几次中央全会精神？",
-    "gold_keywords": [
-      "国家电影局"
-    ],
-    "expected_year": 2019
-  },
-  {
-    "type": "年份区分",
-    "query": "国家电影局门户网站于2019年几月正式上线运行？",
-    "gold_keywords": [
-      "国家电影局"
-    ],
-    "expected_year": 2019
-  },
-  {
-    "type": "无答案",
-    "query": "公司年会的抽奖规则是怎么规定的？",
-    "gold_keywords": [],
-    "expected_year": null
-  },
-  {
-    "type": "无答案",
-    "query": "员工食堂的午餐补贴标准是多少？",
-    "gold_keywords": [],
-    "expected_year": null
-  },
-  {
-    "type": "无答案",
-    "query": "公司内部转岗的审批流程是什么？",
-    "gold_keywords": [],
-    "expected_year": null
-  },
-  {
-    "type": "无答案",
-    "query": "差旅费报销的发票要求有哪些？",
-    "gold_keywords": [],
-    "expected_year": null
-  },
-  {
-    "type": "无答案",
-    "query": "年假未休完能否折算成工资？",
-    "gold_keywords": [],
-    "expected_year": null
-  }
+    {
+        "type": "数字精确",
+        "query": "到2030年，人均体育场地面积要达到多少平方米？",
+        "gold_keywords": [
+            "全民健身计划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "数字精确",
+        "query": "到2030年，知识产权强国建设要取得什么样的进展？",
+        "gold_keywords": [
+            "知识产权保护和运用"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "数字精确",
+        "query": "十四五时期，常住人口城镇化率的目标是多少？",
+        "gold_keywords": [
+            "第十四个五年规划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "数字精确",
+        "query": "全民健身计划要求中小学生每天综合体育活动时间不低于多少？",
+        "gold_keywords": [
+            "全民健身计划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "数字精确",
+        "query": "十四五规划提出全社会研发经费投入年均增长多少？",
+        "gold_keywords": [
+            "第十四个五年规划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "数字精确",
+        "query": "十三五时期，我国农村贫困人口脱贫人数是多少？",
+        "gold_keywords": [
+            "第十四个五年规划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "数字精确",
+        "query": "到2035年，我国知识产权综合竞争力的目标是什么？",
+        "gold_keywords": [
+            "知识产权保护和运用"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "数字精确",
+        "query": "全民健身计划中每千人拥有社会体育指导员的目标是多少名？",
+        "gold_keywords": [
+            "全民健身计划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "主题语义",
+        "query": "国家如何保护专利权人的合法权益、打击侵权假冒行为？",
+        "gold_keywords": [
+            "知识产权保护和运用"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "主题语义",
+        "query": "老百姓身边的健身场地设施应该如何建设？",
+        "gold_keywords": [
+            "全民健身计划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "主题语义",
+        "query": "如何推动高校和科研机构的科技成果转化为现实生产力？",
+        "gold_keywords": [
+            "知识产权保护和运用"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "主题语义",
+        "query": "数字化发展和数字经济建设方面国家有什么部署？",
+        "gold_keywords": [
+            "第十四个五年规划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "主题语义",
+        "query": "商标品牌建设有哪些举措来培育知名品牌？",
+        "gold_keywords": [
+            "知识产权保护和运用"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "主题语义",
+        "query": "冰雪运动如何在全国普及推广？",
+        "gold_keywords": [
+            "全民健身计划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "主题语义",
+        "query": "人工智能如何在体育健身领域应用？",
+        "gold_keywords": [
+            "全民健身计划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "五年规划区分",
+        "query": "十五五规划纲要的总体部署是什么？",
+        "gold_keywords": [
+            "第十五个五年规划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "五年规划区分",
+        "query": "十三五规划纲要主要讲了哪些内容？",
+        "gold_keywords": [
+            "第十三个五年规划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "五年规划区分",
+        "query": "十二五规划纲要的内容是什么？",
+        "gold_keywords": [
+            "第十二个五年规划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "五年规划区分",
+        "query": "十一五规划纲要的重点有哪些？",
+        "gold_keywords": [
+            "第十一个五年规划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "五年规划区分",
+        "query": "十五计划纲要的主要内容？",
+        "gold_keywords": [
+            "第十个五年计划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "政府信息公开",
+        "query": "政府信息公开条例规定了哪些内容？",
+        "gold_keywords": [
+            "政府信息公开条例"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "政府信息公开",
+        "query": "政府信息公开信息处理费如何收取？",
+        "gold_keywords": [
+            "信息处理费"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "政府信息公开",
+        "query": "政府信息公开行政复议案件应当如何处理？",
+        "gold_keywords": [
+            "行政复议"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "政府信息公开",
+        "query": "政府信息公开工作年度报告格式有什么要求？",
+        "gold_keywords": [
+            "年度报告格式"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "政府信息公开",
+        "query": "规章集中公开和动态更新工作有什么要求？",
+        "gold_keywords": [
+            "规章集中公开"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "年份区分",
+        "query": "2024年国家公务员局的政府信息公开工作情况如何？",
+        "gold_keywords": [
+            "国家公务员局2024"
+        ],
+        "expected_year": "2024"
+    },
+    {
+        "type": "年份区分",
+        "query": "2023年国家公务员局的政府信息公开情况？",
+        "gold_keywords": [
+            "国家公务员局2023"
+        ],
+        "expected_year": "2023"
+    },
+    {
+        "type": "年份区分",
+        "query": "2020年国家公务员局的政府信息公开情况？",
+        "gold_keywords": [
+            "国家公务员局2020"
+        ],
+        "expected_year": "2020"
+    },
+    {
+        "type": "年份区分",
+        "query": "2019年国家新闻出版署的政府信息公开情况？",
+        "gold_keywords": [
+            "国家新闻出版署"
+        ],
+        "expected_year": "2019"
+    },
+    {
+        "type": "年份区分",
+        "query": "2021年国家公务员局的政府信息公开情况？",
+        "gold_keywords": [
+            "国家公务员局2021"
+        ],
+        "expected_year": "2021"
+    },
+    {
+        "type": "数字精确",
+        "query": "十五五时期，地级及以上城市细颗粒物（PM2.5）浓度降至多少微克/立方米？",
+        "gold_keywords": [
+            "第十五个五年规划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "数字精确",
+        "query": "十五五时期，森林覆盖率要达到多少？",
+        "gold_keywords": [
+            "第十五个五年规划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "数字精确",
+        "query": "十五五时期要深化第几代移动通信规模部署？",
+        "gold_keywords": [
+            "第十五个五年规划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "数字精确",
+        "query": "十五五时期，农作物耕种收综合机械化率要提高到多少以上？",
+        "gold_keywords": [
+            "第十五个五年规划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "数字精确",
+        "query": "脱贫攻坚战取得全面胜利后，有多少农村贫困人口实现了脱贫？",
+        "gold_keywords": [
+            "第十四个五年规划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "数字精确",
+        "query": "我国坚持最严格的耕地保护制度，严守多少亩耕地红线？",
+        "gold_keywords": [
+            "第十四个五年规划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "数字精确",
+        "query": "城区常住人口在多少万以下的城市将全面取消落户限制？",
+        "gold_keywords": [
+            "第十四个五年规划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "数字精确",
+        "query": "十一五规划期间，农村饮水安全工程要解决多少农村居民的水质不达标及局部地区严重缺水问题？",
+        "gold_keywords": [
+            "第十一个五年规划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "数字精确",
+        "query": "十一五规划中，超高压输变电设备要掌握多少千伏直流输变电关键设备制造技术？",
+        "gold_keywords": [
+            "第十一个五年规划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "数字精确",
+        "query": "十二五规划中，化学需氧量和二氧化硫排放量要求分别减少多少？",
+        "gold_keywords": [
+            "第十二个五年规划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "数字精确",
+        "query": "十二五规划提出粮食综合生产能力要达到多少吨以上？",
+        "gold_keywords": [
+            "第十二个五年规划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "数字精确",
+        "query": "十三五期间，人均国内生产总值增至多少元？",
+        "gold_keywords": [
+            "第十三个五年规划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "数字精确",
+        "query": "十三五期间，有多少比例的行政村实现光纤通达？",
+        "gold_keywords": [
+            "第十三个五年规划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "数字精确",
+        "query": "“十五”期间经济增长速度预期为年均多少？",
+        "gold_keywords": [
+            "第十个五年计划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "数字精确",
+        "query": "2005年第三产业从业人员占全社会从业人员的比重预期是多少？",
+        "gold_keywords": [
+            "第十个五年计划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "数字精确",
+        "query": "全民健身计划提出的人均体育场地面积目标是多少平方米左右？",
+        "gold_keywords": [
+            "全民健身计划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "数字精确",
+        "query": "中小学生每天综合体育活动时间不低于多少小时？",
+        "gold_keywords": [
+            "全民健身计划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "数字精确",
+        "query": "十五五规划提出到2030年人均预期寿命要达到多少岁？",
+        "gold_keywords": [
+            "国民健康"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "数字精确",
+        "query": "十五五规划提出要形成多少分钟基本医疗卫生服务圈？",
+        "gold_keywords": [
+            "国民健康"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "数字精确",
+        "query": "《扩大消费“十五五”规划》提出到2030年社会消费品零售总额要达到多少万亿元左右？",
+        "gold_keywords": [
+            "扩大消费"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "数字精确",
+        "query": "《扩大消费“十五五”规划》提出扩大数字产品消费时，要开展第几代智能网联汽车准入和上路通行试点？",
+        "gold_keywords": [
+            "扩大消费"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "主题语义",
+        "query": "在慢性病防治方面，十五五规划提出了哪些具体举措来推动全链条服务和多病同防同治同管？",
+        "gold_keywords": [
+            "国民健康"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "主题语义",
+        "query": "十五五规划对妇女健康服务有哪些部署，特别是在癌症筛查和疫苗接种方面？",
+        "gold_keywords": [
+            "国民健康"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "主题语义",
+        "query": "十五五规划提出发展哪些新型文化业态，并鼓励开发什么样的文化产品？",
+        "gold_keywords": [
+            "扩大消费"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "主题语义",
+        "query": "十五五规划在汽车消费领域提出了哪些促进全链条创新发展的措施？",
+        "gold_keywords": [
+            "扩大消费"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "主题语义",
+        "query": "各部门和单位在落实《行动计划》时，需要按照什么分工来推进工作？",
+        "gold_keywords": [
+            "特殊教育"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "主题语义",
+        "query": "十五五规划实施过程中，哪个部门要加强统筹协调并开展动态监测评估？",
+        "gold_keywords": [
+            "中医药振兴"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "五年规划区分",
+        "query": "「十五五」期间，我国绿色低碳转型和生态环境质量改善取得了哪些具体成效？",
+        "gold_keywords": [
+            "第十五个五年规划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "五年规划区分",
+        "query": "「十五五」时期，面对国际风云变幻和各种风险挑战，必须保持怎样的战略定力和精神状态来办好自己的事？",
+        "gold_keywords": [
+            "第十五个五年规划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "五年规划区分",
+        "query": "“十二五”规划是在胜利完成哪个五年规划确定的主要目标和任务的基础上编制的？",
+        "gold_keywords": [
+            "第十二个五年规划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "五年规划区分",
+        "query": "“十二五”时期，我国对国际国内形势作出的总体判断是什么？",
+        "gold_keywords": [
+            "第十二个五年规划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "五年规划区分",
+        "query": "“十二五”规划对化学需氧量和二氧化硫排放总量的减少目标分别是多少？",
+        "gold_keywords": [
+            "第十二个五年规划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "五年规划区分",
+        "query": "十三五时期，世界经济处于怎样的发展态势？",
+        "gold_keywords": [
+            "第十三个五年规划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "五年规划区分",
+        "query": "十三五期间，在哪些严重缺水区域实施专项节水行动计划？",
+        "gold_keywords": [
+            "第十三个五年规划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "五年规划区分",
+        "query": "「十一五」期间，大型乙烯成套设备方面要推进哪些设备的国产化？",
+        "gold_keywords": [
+            "第十一个五年规划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "五年规划区分",
+        "query": "「十一五」期间，洁净煤发电领域要建设单机多少万千瓦级的循环流化床电站？",
+        "gold_keywords": [
+            "第十一个五年规划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "五年规划区分",
+        "query": "十五计划指出，一些领域市场经济秩序相当混乱，还存在哪些比较严重的现象和作风问题？",
+        "gold_keywords": [
+            "第十个五年计划"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "相似文本",
+        "query": "国民健康“十五五”规划对适龄女童免费接种哪种疫苗作出安排？",
+        "gold_keywords": [
+            "国民健康"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "相似文本",
+        "query": "国民健康“十五五”规划鼓励二级及以上医疗机构设立哪些方面的特色门诊？",
+        "gold_keywords": [
+            "国民健康"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "相似文本",
+        "query": "在扩大消费相关举措中，支持哪些文化业态和品牌发展，鼓励开发哪些文化产品？",
+        "gold_keywords": [
+            "扩大消费"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "相似文本",
+        "query": "在扩大消费的部署中，汽车后市场消费包括哪些具体领域？",
+        "gold_keywords": [
+            "扩大消费"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "相似文本",
+        "query": "国务院关于特殊教育发展提升十五五行动计划的批复文号是什么？",
+        "gold_keywords": [
+            "特殊教育"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "相似文本",
+        "query": "国务院各有关部门和单位在落实特殊教育发展提升十五五行动计划时，需要怎样解决实施中遇到的问题？",
+        "gold_keywords": [
+            "特殊教育"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "相似文本",
+        "query": "国务院关于中医药振兴发展“十五五”规划的批复文号是多少？",
+        "gold_keywords": [
+            "中医药振兴"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "相似文本",
+        "query": "十五五规划实施过程中，由哪些部门负责加强统筹协调、开展动态监测和评估并及时研究解决问题？",
+        "gold_keywords": [
+            "中医药振兴"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "相似文本",
+        "query": "十五五规划提出要深入推进哪三类知识产权案件的“三合一”审判机制改革？",
+        "gold_keywords": [
+            "知识产权保护和运用"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "相似文本",
+        "query": "十五五规划对侵犯各种所有制经济知识产权的行为提出了怎样的追责原则，并要求防止和纠正什么？",
+        "gold_keywords": [
+            "知识产权保护和运用"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "政府信息公开",
+        "query": "《公共企事业单位信息公开规定制定办法》经国务院同意后，接下来需要做什么？",
+        "gold_keywords": [
+            "公共企事业单位"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "政府信息公开",
+        "query": "国务院有关主管部门制定或修订教育、卫生健康、供水、供电、供气、供热、环境保护、公共交通等领域的公共企事业单位信息公开规定，依据是什么？",
+        "gold_keywords": [
+            "公共企事业单位"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "政府信息公开",
+        "query": "《关于可否采用到付方式送达政府信息公开答复的函》的发文字号是什么？",
+        "gold_keywords": [
+            "送达"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "政府信息公开",
+        "query": "政府信息公开处理决定采取直接送达、委托其他行政机关代为送达等方式送达的，期限计算的时点是什么？",
+        "gold_keywords": [
+            "送达"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "政府信息公开",
+        "query": "行政复议机关作为共同被告的行政诉讼案件，主要案由是什么？",
+        "gold_keywords": [
+            "填报"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "政府信息公开",
+        "query": "办综函〔2017〕559号这份函件的完整名称是什么？",
+        "gold_keywords": [
+            "接收渠道"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "政府信息公开",
+        "query": "为便利申请人、提高工作效率，行政机关被鼓励结合自身实际开通哪些申请接收渠道？",
+        "gold_keywords": [
+            "接收渠道"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "政府信息公开",
+        "query": "省政府办公厅在法定期限内书面告知申请人、由省国土资源厅在法定期限内对申请人予以答复，法律上可以视为什么行为？",
+        "gold_keywords": [
+            "答复主体"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "政府信息公开",
+        "query": "不动产登记资料查询、户籍信息查询、工商登记资料查询这类事项，与《政府信息公开条例》调整的政府信息公开行为在哪些方面存在根本性差别？",
+        "gold_keywords": [
+            "业务查询"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "政府信息公开",
+        "query": "行政机关的职权发生变更后，原来由它承担的责任由谁承担？",
+        "gold_keywords": [
+            "机构改革"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "政府信息公开",
+        "query": "机构改革后，如果申请人向职权被划出的行政机关提交了政府信息公开申请，该行政机关可以怎么处理？",
+        "gold_keywords": [
+            "机构改革"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "政府信息公开",
+        "query": "政府信息公开平台除了是发布法定主动公开内容的公开平台外，还是什么平台？",
+        "gold_keywords": [
+            "公开平台"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "政府信息公开",
+        "query": "政府网站对类似“政府信息公开”的栏目但使用了其他名称的，应当如何处理？",
+        "gold_keywords": [
+            "公开平台"
+        ],
+        "expected_year": null
+    },
+    {
+        "type": "年份区分",
+        "query": "2019年国家公务员局有多少项行政许可和对外管理服务事项？",
+        "gold_keywords": [
+            "国家公务员局2019"
+        ],
+        "expected_year": "2019"
+    },
+    {
+        "type": "年份区分",
+        "query": "2022年国家公务员局主动发布了多少类中央机关公务员考试录用、公开遴选和公开选调工作有关公告？",
+        "gold_keywords": [
+            "国家公务员局2022"
+        ],
+        "expected_year": "2022"
+    },
+    {
+        "type": "年份区分",
+        "query": "国家公务员局在2022年12月共发布了几项关于2023年度公务员招录及遴选选调笔试时间安排的公告？",
+        "gold_keywords": [
+            "国家公务员局2022"
+        ],
+        "expected_year": "2022"
+    },
+    {
+        "type": "年份区分",
+        "query": "2025年10月，国家公务员局发布了多少份关于公务员招录和遴选的公告？",
+        "gold_keywords": [
+            "国家公务员局2025"
+        ],
+        "expected_year": "2025"
+    },
+    {
+        "type": "年份区分",
+        "query": "2025年国家公务员局因政府信息公开工作被申请行政复议多少件？",
+        "gold_keywords": [
+            "国家公务员局2025"
+        ],
+        "expected_year": "2025"
+    },
+    {
+        "type": "年份区分",
+        "query": "2019年，国家新闻出版署（国家版权局）全面贯彻了党的哪几次全会精神？",
+        "gold_keywords": [
+            "国家新闻出版署"
+        ],
+        "expected_year": "2019"
+    },
+    {
+        "type": "年份区分",
+        "query": "2019年，国家新闻出版署（国家版权局）全年公开行政规范性文件多少件？",
+        "gold_keywords": [
+            "国家新闻出版署"
+        ],
+        "expected_year": "2019"
+    },
+    {
+        "type": "年份区分",
+        "query": "2019年国家电影局贯彻了党的哪几次中央全会精神？",
+        "gold_keywords": [
+            "国家电影局"
+        ],
+        "expected_year": "2019"
+    },
+    {
+        "type": "年份区分",
+        "query": "国家电影局门户网站于2019年几月正式上线运行？",
+        "gold_keywords": [
+            "国家电影局"
+        ],
+        "expected_year": "2019"
+    },
+    {
+        "type": "无答案",
+        "query": "公司年会的抽奖规则是怎么规定的？",
+        "gold_keywords": [],
+        "expected_year": null
+    },
+    {
+        "type": "无答案",
+        "query": "员工食堂的午餐补贴标准是多少？",
+        "gold_keywords": [],
+        "expected_year": null
+    },
+    {
+        "type": "无答案",
+        "query": "公司内部转岗的审批流程是什么？",
+        "gold_keywords": [],
+        "expected_year": null
+    },
+    {
+        "type": "无答案",
+        "query": "差旅费报销的发票要求有哪些？",
+        "gold_keywords": [],
+        "expected_year": null
+    },
+    {
+        "type": "无答案",
+        "query": "年假未休完能否折算成工资？",
+        "gold_keywords": [],
+        "expected_year": null
+    }
 ]

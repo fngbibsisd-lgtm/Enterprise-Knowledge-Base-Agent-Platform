@@ -68,7 +68,8 @@ async def amain() -> int:
         if exp_year is not None:
             year_total += 1
             if sources:
-                year_ok = exp_year in sources[0]["source"]
+                # expected_year 统一为字符串；str() 兜底防手工写回 int
+                year_ok = str(exp_year) in sources[0]["source"]
                 if year_ok:
                     year_correct += 1
             else:

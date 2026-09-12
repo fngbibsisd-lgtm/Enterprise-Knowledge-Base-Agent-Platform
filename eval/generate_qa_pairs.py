@@ -49,7 +49,7 @@ class DocSpec:
     gold: list[str]          # gold_keywords（必须出现在该文档文件名里）
     type: str                # 题型
     n: int                   # 生成题数
-    expected_year: int | None = None
+    expected_year: str | None = None   # 年份是精确枚举值，与文件名做字符串匹配（勿用 int）
     hint: str = ""           # 给 LLM 的出题侧重
     found: str = field(default="", init=False)
 
@@ -134,15 +134,15 @@ DOC_SPECS: list[DocSpec] = [
 
     # ---- 年度报告：跨年份区分（同单位不同年份，正文高度雷同）----
     DocSpec("国家公务员局2019年政府信息公开工作年度报告", ["国家公务员局2019"], "年份区分", 2,
-            expected_year=2019, hint="2019 年该局公开工作的具体情况"),
+            expected_year="2019", hint="2019 年该局公开工作的具体情况"),
     DocSpec("国家公务员局2022年政府信息公开工作年度报告", ["国家公务员局2022"], "年份区分", 2,
-            expected_year=2022, hint="2022 年该局公开工作的具体情况"),
+            expected_year="2022", hint="2022 年该局公开工作的具体情况"),
     DocSpec("国家公务员局2025年政府信息公开工作年度报告", ["国家公务员局2025"], "年份区分", 2,
-            expected_year=2025, hint="2025 年该局公开工作的具体情况"),
+            expected_year="2025", hint="2025 年该局公开工作的具体情况"),
     DocSpec("国家新闻出版署（国家版权局）2019年政府信息公开工作年度报告", ["国家新闻出版署"], "年份区分", 2,
-            expected_year=2019, hint="2019 年新闻出版署公开工作情况"),
+            expected_year="2019", hint="2019 年新闻出版署公开工作情况"),
     DocSpec("国家电影局2019年政府信息公开工作年度报告", ["国家电影局"], "年份区分", 2,
-            expected_year=2019, hint="2019 年国家电影局公开工作情况"),
+            expected_year="2019", hint="2019 年国家电影局公开工作情况"),
 ]
 
 # 无答案题：语料里根本没有的主题，考察检索是否会硬凑结果

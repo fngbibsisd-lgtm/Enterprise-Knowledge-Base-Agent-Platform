@@ -87,7 +87,9 @@ async def _run_mode(mode: str, pairs: list[dict], settings) -> dict:
         exp_year = p.get("expected_year")
         if exp_year is not None:
             year_total += 1
-            if sources and exp_year in sources[0]["source"]:
+            # 数据集里 expected_year 统一是字符串（年份是精确枚举值，与文件名做字符串匹配）；
+            # 这里再 str() 一次，防止手工编辑数据集时写回 int 又把评测跑崩
+            if sources and str(exp_year) in sources[0]["source"]:
                 year_correct += 1
 
         st = by_type.setdefault(p.get("type", "其他"), {"hit8": 0, "total": 0})
