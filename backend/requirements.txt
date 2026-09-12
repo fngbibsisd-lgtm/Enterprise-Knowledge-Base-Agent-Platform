@@ -1,16 +1,35 @@
-fastapi
-uvicorn[standard]
-openai
-numpy
-PyPDF2
-python-multipart
-python-dotenv
+# ===== 核心：Web 框架 / LLM SDK / 文档处理 =====
+fastapi>=0.110
+uvicorn[standard]>=0.27
+openai>=1.40,<4            # 已在 3.13 验证；流式 + tool_calls 接口在 1.x~3.x 保持稳定
+numpy>=1.26
+PyPDF2>=3.0
+python-multipart>=0.0.9
+python-dotenv>=1.0
 
-# ===== V2 主流架构 =====
+# ===== V2 架构：异步 ORM / 迁移 / 认证 / 配置 =====
 sqlalchemy[asyncio]>=2.0
-asyncmy
-alembic
-pyjwt
-pydantic-settings
-pymilvus>=2.5
-milvus-lite
+asyncmy>=0.2.9
+alembic>=1.13
+pyjwt>=2.8
+pydantic-settings>=2.2
+
+# ===== 向量库 =====
+# 开发用 Milvus Lite（本地文件 ./milvus.db），生产用 standalone
+pymilvus>=2.5,<4
+milvus-lite>=2.4
+
+# ===== 可选能力 A：MCP 动态工具（examples/mcp）=====
+# 未安装时 agent 自动退化为「仅手写工具」，主线问答不受影响（见 backend/agent/tools.py）
+# 注意：demo_server 用的是 mcp 2.x 的 MCPServer（1.x 叫 FastMCP），故下限为 2.0
+mcp>=2.0
+
+# ===== 可选能力 B：LangGraph 对照实现（examples/langgraph_agent）=====
+# 仅运行该对照 demo 时需要；不装不影响后端启动与主线功能
+langgraph>=0.2
+langchain-openai>=0.2
+
+# ===== 验证环境（2026-09，python 3.10）=====
+# fastapi 0.141.1 / uvicorn 0.52.1 / openai 3.13.0 / sqlalchemy 2.0.51
+# pymilvus 3.0.1 / milvus-lite 3.2.1 / mcp 2.2.0
+# langgraph 1.2.11 / langchain-openai 1.6.2 / pydantic 2.13.4
