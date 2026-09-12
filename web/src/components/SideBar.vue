@@ -6,6 +6,26 @@
 
     <el-divider />
 
+    <div class="session-header">
+      <span>对话记录</span>
+      <el-button text size="small" type="primary" @click="onNewSession">新对话</el-button>
+    </div>
+    <div class="session-list">
+      <div
+        v-for="s in chatStore.sessions"
+        :key="s.id"
+        class="session-item"
+        :class="{ active: s.id === chatStore.currentSessionId }"
+        @click="onSelect(s.id)"
+      >
+        <span class="session-title">{{ s.title }}</span>
+        <el-button text size="small" class="session-del" @click.stop="onDelete(s.id)">删除</el-button>
+      </div>
+      <div v-if="!chatStore.sessions.length" class="session-empty">暂无对话</div>
+    </div>
+
+    <el-divider />
+
     <template v-if="auth.isAdmin">
       <el-upload :auto-upload="false" :show-file-list="false" accept=".pdf,.txt" :on-change="onFileChange">
         <el-button style="width: 100%">选择文档</el-button>
@@ -35,9 +55,11 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { getStatus, reset, upload } from '../api'
 import { useAuthStore } from '../stores/auth'
+import { useChatStore } from '../stores/chat'
 
 const router = useRouter()
 const auth = useAuthStore()
+const chatStore = useChatStore()
 
 const file = ref<File | null>(null)
 const uploading = ref(false)
@@ -91,6 +113,22 @@ function onLogout() {
   router.push('/login')
 }
 
+function onNewSession() {
+  chatStore.newSession()
+}
+
+function onSelect(id: number) {
+  void chatStore.selectSession(id)
+}
+
+async function onDelete(id: number) {
+  try {
+    await chatStore.removeSession(id)
+  } catch (e: any) {
+    ElMessage.error(e.message)
+  }
+}
+
 onMounted(loadStatus)
 </script>
 
@@ -120,5 +158,52 @@ onMounted(loadStatus)
 .status {
   font-size: 13px;
   color: #606266;
+}
+.session-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #606266;
+  margin-bottom: 6px;
+}
+.session-list {
+  max-height: 40vh;
+  overflow-y: auto;
+}
+.session-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #303133;
+  cursor: pointer;
+}
+.session-item:hover {
+  background: #f5f7fa;
+}
+.session-item.active {
+  background: #eef2ff;
+  color: #4d6bfe;
+}
+.session-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.session-del {
+  visibility: hidden;
+}
+.session-item:hover .session-del {
+  visibility: visible;
+}
+.session-empty {
+  font-size: 12px;
+  color: #b0b3b8;
+  padding: 4px 8px;
 }
 </style>

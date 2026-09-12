@@ -1,26 +1,43 @@
 <template>
   <div class="msg" :class="msg.role">
     <div class="bubble">
-      <div
-        v-if="msg.role === 'assistant'"
-        class="content markdown"
-        v-html="renderMarkdown(msg.content)"
-        @click="onCopyClick"
-      ></div>
+      <template v-if="msg.role === 'assistant'">
+        <div
+          v-if="(msg.toolCalls && msg.toolCalls.length) || (msg.streaming && !msg.content)"
+          class="thinking-box"
+        >
+          <div class="thinking-head">
+            <span v-if="msg.streaming" class="spin"></span>
+            <span class="thinking-title">{{ msg.streaming ? msg.thinking || '正在思考…' : '思考过程' }}</span>
+          </div>
+          <div v-for="(t, i) in msg.toolCalls || []" :key="i" class="tool">
+            <div class="tool-line">
+              <span class="tool-name">{{ toolLine(t) }}</span>
+            </div>
+            <div v-if="t.summary" class="tool-result">{{ t.summary }}</div>
+            <div v-else-if="msg.streaming" class="tool-result pending">执行中…</div>
+          </div>
+        </div>
+        <div v-if="msg.plan && msg.plan.length" class="plan-box">
+          <div class="plan-title">任务规划</div>
+          <ol class="plan-list">
+            <li v-for="(s, i) in msg.plan" :key="i">{{ s }}</li>
+          </ol>
+          <div v-for="(r, i) in (msg.subResults || [])" :key="i" class="sub-result">
+            <div class="sub-result-task">{{ i + 1 }}. {{ r.task }}</div>
+            <div class="sub-result-answer markdown" v-html="renderMarkdown(r.answer)"></div>
+          </div>
+        </div>
+        <div class="content markdown" v-html="renderMarkdown(msg.content)" @click="onCopyClick"></div>
+      </template>
       <div v-else class="content">{{ msg.content }}</div>
 
       <el-collapse v-if="msg.sources && msg.sources.length" class="extra">
         <el-collapse-item title="引用来源" name="sources">
           <div v-for="(s, i) in msg.sources" :key="i" class="source">
             <div class="source-name">【{{ i + 1 }}】{{ s.source }}（相关度 {{ s.score.toFixed(2) }}）</div>
-            <div class="source-preview">{{ s.preview }}</div>
+            <div v-if="s.preview" class="source-preview">{{ s.preview }}</div>
           </div>
-        </el-collapse-item>
-      </el-collapse>
-
-      <el-collapse v-if="msg.toolCalls && msg.toolCalls.length" class="extra">
-        <el-collapse-item title="工具调用记录" name="tools">
-          <pre class="tools">{{ JSON.stringify(msg.toolCalls, null, 2) }}</pre>
         </el-collapse-item>
       </el-collapse>
     </div>
@@ -32,7 +49,7 @@ import MarkdownIt from 'markdown-it'
 import hljs from 'highlight.js'
 import texmath from 'markdown-it-texmath'
 import katex from 'katex'
-import type { ChatMessage } from '../types'
+import type { ChatMessage, ToolCall } from '../types'
 
 import 'highlight.js/styles/atom-one-dark.css'
 import 'katex/dist/katex.min.css'
@@ -75,6 +92,35 @@ md.renderer.rules.fence = (tokens, idx) => {
 
 function renderMarkdown(text: string): string {
   return md.render(text)
+}
+
+const TOOL_LABELS: Record<string, string> = {
+  knowledge_search: '检索知识库',
+  get_document: '读取文档',
+  list_tables: '查看表结构',
+  sql_query: '查询数据库',
+}
+
+function toolLabel(name: string): string {
+  return TOOL_LABELS[name] || name
+}
+
+// 只挑对人类有意义的参数,不暴露内部细节(SQL/JSON 都不显示)
+function argSummary(name: string, args: Record<string, unknown>): string {
+  switch (name) {
+    case 'knowledge_search':
+      return typeof args.query === 'string' ? args.query : ''
+    case 'get_document':
+      return typeof args.source === 'string' ? args.source : ''
+    default:
+      return ''
+  }
+}
+
+function toolLine(t: ToolCall): string {
+  const label = toolLabel(t.tool_name)
+  const arg = argSummary(t.tool_name, t.arguments)
+  return arg ? `${label}：${arg}` : label
 }
 
 // 事件委托：点「复制」按钮时拷贝对应代码块内容
@@ -304,5 +350,106 @@ defineProps<{ msg: ChatMessage }>()
   padding: 8px;
   border-radius: 4px;
   overflow-x: auto;
+}
+.typing {
+  color: #909399;
+  font-size: 13px;
+  padding: 2px 0;
+}
+.thinking-box {
+  margin-bottom: 8px;
+  padding: 8px 10px;
+  background: #f7f8fa;
+  border-left: 3px solid #c0c4cc;
+  border-radius: 6px;
+}
+.plan-box {
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  background: #f7f8fa;
+  border-left: 3px solid #4d6bfe;
+  border-radius: 6px;
+}
+.plan-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #4d6bfe;
+  margin-bottom: 6px;
+}
+.plan-list {
+  margin: 0 0 6px;
+  padding-left: 20px;
+  font-size: 13px;
+  color: #606266;
+}
+.sub-result {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed #e0e3e8;
+}
+.sub-result-task {
+  font-size: 13px;
+  font-weight: 600;
+  color: #303133;
+}
+.sub-result-answer {
+  font-size: 13px;
+  color: #606266;
+  margin-top: 4px;
+}
+.thinking-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.thinking-title {
+  font-size: 13px;
+  color: #909399;
+}
+.spin {
+  width: 12px;
+  height: 12px;
+  border: 2px solid #c0c4cc;
+  border-top-color: #4d6bfe;
+  border-radius: 50%;
+  animation: spin-rotate 0.8s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.tool {
+  padding: 6px 0;
+  border-bottom: 1px dashed #eee;
+}
+.tool:last-child {
+  border-bottom: none;
+}
+.tool-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tool-name {
+  font-weight: 600;
+  font-size: 13px;
+  color: #4d6bfe;
+}
+.tool-result {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 4px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: #f5f7fa;
+  padding: 6px 8px;
+  border-radius: 4px;
+}
+.tool-result.pending {
+  color: #4d6bfe;
+  background: #eef2ff;
 }
 </style>
