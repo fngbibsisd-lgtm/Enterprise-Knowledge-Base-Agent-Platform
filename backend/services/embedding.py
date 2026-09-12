@@ -10,6 +10,7 @@ def _client(settings: Settings) -> AsyncOpenAI:
     return AsyncOpenAI(
         api_key=settings.embedding_key,
         base_url=settings.embedding_base_url,
+        timeout=settings.llm_timeout_sec,
     )
 
 

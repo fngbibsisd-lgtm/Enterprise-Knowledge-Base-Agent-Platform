@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     llm_api_key: str = "sk-xxx"
     llm_base_url: str = "https://api.deepseek.com/v1"
     max_tokens: int = 1024
+    llm_timeout_sec: float = 120.0  # OpenAI SDK 默认 600s,太长,卡住会干等 10 分钟
 
     # ===== Embedding =====
     embedding_model: str = "Qwen/Qwen3-VL-Embedding-8B"
@@ -36,6 +37,14 @@ class Settings(BaseSettings):
     # ===== 检索 =====
     top_k: int = 8
 
+    # ===== Agent =====
+    agent_max_iterations: int = 6          # 工具调用最大轮数
+    agent_max_history: int = 12            # 多轮对话保留的最近消息条数（滑动窗口）
+    agent_tool_result_max_chars: int = 4000  # 单条工具结果最大字符数（截断保护）
+    agent_sql_max_rows: int = 50           # sql_query 最大返回行数（自动补 LIMIT）
+    agent_sql_timeout_sec: float = 5.0     # sql_query 执行超时（秒）
+    agent_top_k: int = 5                   # knowledge_search 默认返回条数
+
     # ===== 存储路径 =====
     data_dir: str = "./data"
     upload_dir: str = "./data/uploads"
@@ -43,6 +52,7 @@ class Settings(BaseSettings):
     # ===== Milvus 向量库 =====
     milvus_db_uri: str = "./milvus.db"       # Milvus Lite 本地文件；standalone 用 http://localhost:19530
     milvus_collection: str = "knowledge_chunks"
+    milvus_collection_eval: str = "knowledge_chunks_eval"  # 评测语料独立 collection，避免污染生产索引
     embedding_dim: int = 4096
 
     # ===== MySQL（异步驱动 asyncmy）=====

@@ -15,7 +15,11 @@ _SYSTEM_PROMPT = """
 
 
 def _client(settings: Settings) -> AsyncOpenAI:
-    return AsyncOpenAI(api_key=settings.llm_api_key, base_url=settings.llm_base_url)
+    return AsyncOpenAI(
+        api_key=settings.llm_api_key,
+        base_url=settings.llm_base_url,
+        timeout=settings.llm_timeout_sec,
+    )
 
 
 def _build_context(sources: list[dict]) -> str:

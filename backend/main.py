@@ -34,9 +34,11 @@ async def lifespan(app: FastAPI):
         await session.commit()
     # 确保 Milvus collection 就绪
     await vector_store.ensure_collection(settings)
-    status = await rag.get_index_status(settings)
-    print(f"\n  索引状态: {'已加载' if status['indexed'] else '空索引'}  chunks={status['total_chunks']}\n")
     yield
+    # 释放 MCP 长驻连接（子进程 + anyio task group 必须成对退出，见 examples/mcp/mcp_client.py）
+    from examples.mcp.mcp_client import close_mcp
+
+    await close_mcp()
 
 
 app = FastAPI(
