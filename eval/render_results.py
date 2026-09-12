@@ -38,10 +38,26 @@ def render_retrieval() -> None:
         print(f"| {r['label']} | {_pct(r['recall@5'])} | {_pct(r['recall@8'])} | "
               f"{r['mrr@8']:.3f} | {year} | {r['avg_latency_ms']:.0f} ms |")
 
-    base, best = d["results"][0], d["results"][-1]
-    print(f"\n相比「仅 BM25」，生产配置 Recall@8 变化："
-          f"{_pct(base['recall@8'])} → {_pct(best['recall@8'])}"
-          f"（{(best['recall@8'] - base['recall@8']) * 100:+.1f}pp）\n")
+    # 四种配置不是累积链条（vector 不是「bm25 + vector」），拿 bm25 当所有行的基线
+    # 会把「只用向量」显示成对 BM25 的负提升，读起来像向量检索有害。
+    # 只报能干净隔离的两个组件。
+    by_mode = {r["mode"]: r for r in d["results"]}
+    bm25_r, vec_r = by_mode["bm25"], by_mode["vector"]
+    hyb_r, hyb_y_r = by_mode["hybrid"], by_mode["hybrid_year"]
+    single_best = max(bm25_r["recall@8"], vec_r["recall@8"])
+
+    print("\n各组件贡献（隔离对比，非叠加）：\n")
+    print(f"- **RRF 融合**：单路最佳 Recall@8 {_pct(single_best)}"
+          f" → 融合后 {_pct(hyb_r['recall@8'])}"
+          f"（{(hyb_r['recall@8'] - single_best) * 100:+.1f}pp）")
+    if hyb_r["year_top1"] is not None and hyb_y_r["year_top1"] is not None:
+        print(f"- **年份策略**：年份 Top-1 {_pct(hyb_r['year_top1'])}"
+              f" → {_pct(hyb_y_r['year_top1'])}"
+              f"（{(hyb_y_r['year_top1'] - hyb_r['year_top1']) * 100:+.1f}pp）")
+    print(f"- **年份策略的代价**：Recall@5 {_pct(hyb_r['recall@5'])}"
+          f" → {_pct(hyb_y_r['recall@5'])}"
+          f"（{(hyb_y_r['recall@5'] - hyb_r['recall@5']) * 100:+.1f}pp）")
+    print()
 
     print("\n### 分题型 Recall@8\n")
     types = sorted({t for r in d["results"] for t in r["by_type"]})
