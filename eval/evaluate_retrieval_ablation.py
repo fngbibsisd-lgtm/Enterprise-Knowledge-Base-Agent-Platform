@@ -72,11 +72,19 @@ async def _run_mode(mode: str, pairs: list[dict], settings) -> dict:
     latencies: list[float] = []
     by_type: dict[str, dict] = {}
 
-    for p in answerable:
+    total = len(answerable)
+    t_start = time.perf_counter()
+    for i, p in enumerate(answerable, 1):
         golds = p["gold_keywords"]
         t0 = time.perf_counter()
         sources = await rag.search(p["query"], settings, mode=mode, verbose=False)
         latencies.append((time.perf_counter() - t0) * 1000)
+
+        # 心跳：整轮要跑 4 个模式 × 99 题，没有进度输出时中途会像死机
+        if i % 10 == 0 or i == total:
+            elapsed = time.perf_counter() - t_start
+            print(f"      {i}/{total}  已用 {elapsed:.0f}s  预计本模式共 {elapsed / i * total:.0f}s",
+                  flush=True)
 
         top5, top8 = sources[:5], sources[:8]
         h5, h8 = _hit(top5, golds), _hit(top8, golds)
