@@ -155,12 +155,27 @@ async def amain() -> int:
               f"{r['mrr@8']:>9.3f}{_pct(r['year_top1']):>11}{r['avg_latency_ms']:>10.0f}")
     print("=" * 78)
 
-    base = results[0]
-    best = results[-1]
-    print("\n各组件相对「仅 BM25」的 Recall@8 提升：")
-    for r in results[1:]:
-        print(f"  {r['label']:<22} {base['recall@8'] * 100:5.1f}% → {r['recall@8'] * 100:5.1f}%"
-              f"  (+{(r['recall@8'] - base['recall@8']) * 100:.1f}pp)")
+    # ---- 组件贡献：隔离对比，不做叠加 ----
+    # 这四种配置不是累积链条（vector 并不是「bm25 + vector」，它是单独一路），
+    # 所以不能拿 bm25 当所有行的基线——那会把「只用向量」显示成对 BM25 的负提升，
+    # 读起来像「向量检索有害」，而实际只是两路各自单独跑的结果。
+    # 能干净隔离的只有两个组件：
+    by_mode = {r["mode"]: r for r in results}
+    bm25_r, vec_r = by_mode["bm25"], by_mode["vector"]
+    hyb_r, hyb_y_r = by_mode["hybrid"], by_mode["hybrid_year"]
+
+    print("\n各组件贡献（隔离对比，非叠加）：")
+    single_best = max(bm25_r["recall@8"], vec_r["recall@8"])
+    print(f"  RRF 融合      : 单路最佳 Recall@8 {single_best * 100:5.1f}%"
+          f" → 融合后 {hyb_r['recall@8'] * 100:5.1f}%"
+          f"  ({(hyb_r['recall@8'] - single_best) * 100:+.1f}pp)")
+    if hyb_r["year_top1"] is not None and hyb_y_r["year_top1"] is not None:
+        print(f"  年份策略      : 年份 Top-1 {hyb_r['year_top1'] * 100:5.1f}%"
+              f" → {hyb_y_r['year_top1'] * 100:5.1f}%"
+              f"  ({(hyb_y_r['year_top1'] - hyb_r['year_top1']) * 100:+.1f}pp)")
+    print(f"  年份策略的代价 : Recall@5 {hyb_r['recall@5'] * 100:5.1f}%"
+          f" → {hyb_y_r['recall@5'] * 100:5.1f}%"
+          f"  ({(hyb_y_r['recall@5'] - hyb_r['recall@5']) * 100:+.1f}pp)")
 
     print("\n分题型 Recall@8：")
     types = sorted({t for r in results for t in r["by_type"]})
