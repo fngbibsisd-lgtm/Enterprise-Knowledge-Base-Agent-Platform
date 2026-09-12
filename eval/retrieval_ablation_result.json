@@ -1,0 +1,87 @@
+{
+  "qa_file": "qa_pairs.json",
+  "total_questions": 104,
+  "answerable": 99,
+  "results": [
+    {
+      "mode": "bm25",
+      "label": "BM25 仅关键词",
+      "answerable_n": 99,
+      "unanswerable_n": 5,
+      "recall@5": 0.9899,
+      "recall@8": 0.9899,
+      "mrr@8": 0.9254,
+      "year_top1": 0.9286,
+      "year_n": 14,
+      "avg_latency_ms": 991.5,
+      "by_type": {
+        "主题语义": 1.0,
+        "五年规划区分": 0.9333,
+        "年份区分": 1.0,
+        "政府信息公开": 1.0,
+        "数字精确": 1.0,
+        "相似文本": 1.0
+      }
+    },
+    {
+      "mode": "vector",
+      "label": "Milvus 仅向量",
+      "answerable_n": 99,
+      "unanswerable_n": 5,
+      "recall@5": 0.9495,
+      "recall@8": 0.9495,
+      "mrr@8": 0.8513,
+      "year_top1": 0.5714,
+      "year_n": 14,
+      "avg_latency_ms": 1526.1,
+      "by_type": {
+        "主题语义": 0.7692,
+        "五年规划区分": 1.0,
+        "年份区分": 1.0,
+        "政府信息公开": 0.9444,
+        "数字精确": 1.0,
+        "相似文本": 0.9
+      }
+    },
+    {
+      "mode": "hybrid",
+      "label": "+ RRF 融合",
+      "answerable_n": 99,
+      "unanswerable_n": 5,
+      "recall@5": 0.9899,
+      "recall@8": 1.0,
+      "mrr@8": 0.8805,
+      "year_top1": 0.8571,
+      "year_n": 14,
+      "avg_latency_ms": 1487.0,
+      "by_type": {
+        "主题语义": 1.0,
+        "五年规划区分": 1.0,
+        "年份区分": 1.0,
+        "政府信息公开": 1.0,
+        "数字精确": 1.0,
+        "相似文本": 1.0
+      }
+    },
+    {
+      "mode": "hybrid_year",
+      "label": "+ 年份策略(生产)",
+      "answerable_n": 99,
+      "unanswerable_n": 5,
+      "recall@5": 0.9798,
+      "recall@8": 1.0,
+      "mrr@8": 0.8758,
+      "year_top1": 1.0,
+      "year_n": 14,
+      "avg_latency_ms": 1745.2,
+      "by_type": {
+        "主题语义": 1.0,
+        "五年规划区分": 1.0,
+        "年份区分": 1.0,
+        "政府信息公开": 1.0,
+        "数字精确": 1.0,
+        "相似文本": 1.0
+      }
+    }
+  ]
+}

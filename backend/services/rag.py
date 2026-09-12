@@ -6,6 +6,8 @@ RAG 核心服务（异步）—— 切片 → 向量化 → Milvus + BM25 混合
 """
 import os
 import re
+import time
+from dataclasses import dataclass
 
 from backend.core.config import Settings
 from backend.services import vector_store
@@ -41,7 +43,9 @@ async def build_index_for_file(filepath: str, settings: Settings) -> int:
             chunks.append({"text": f"【来源：{source}】{text}", "source": source})
     if not chunks:
         return 0
-    return await vector_store.add_chunks(chunks, settings)
+    n = await vector_store.add_chunks(chunks, settings)
+    invalidate_corpus_cache(settings.milvus_collection)
+    return n
 
 
 # 检索模式。hybrid_year 是生产默认（混合检索 + 年份策略）；
@@ -49,39 +53,69 @@ async def build_index_for_file(filepath: str, settings: Settings) -> int:
 RETRIEVAL_MODES = ("bm25", "vector", "hybrid", "hybrid_year")
 DEFAULT_RETRIEVAL_MODE = "hybrid_year"
 
-# ---- BM25 索引缓存 ----
-# BM25Index 构建要对全部 chunk 重新分词，实测 835 个 chunk（43 万字）约 256ms；
-# 而它原本每次 rag.search 都会重建，是查询路径上一笔固定开销。
-# 这里按 (chunk 数, 最大 id) 做版本指纹缓存：
-#   Milvus 的主键自增 → 任何新增都会改变 max_id，任何删除都会改变 count，
-#   因此指纹能准确反映语料是否变更，无需额外版本号。
-# 进程内缓存，多 worker 部署时每个 worker 各存一份（可接受：只影响首次命中）。
-_bm25_cache: dict[str, tuple[tuple[int, int], BM25Index]] = {}
+# ---- 语料缓存（全量 chunk + BM25 索引）----
+# 这两样东西失效条件完全相同（都只依赖 collection 的内容），合并成一个缓存条目，
+# 避免两套指纹各说各话。
+#
+# 为什么需要：
+#   原先每次 rag.search 都调 get_all_chunks()，把全量 chunk 正文从 Milvus 拉回来。
+#   实测 835 个 chunk（43.5 万字）约 811ms，是单次检索里最大的一项开销——
+#   对比之下 Milvus 真正干活的向量检索只要 59ms。BM25 索引构建（238ms）
+#   同样在查询路径上，一并缓存。
+#
+# 指纹为什么用 count()：
+#   它走 get_collection_stats，不需要 load collection，实测约 37ms，
+#   比全量拉取便宜 20 倍以上，适合放在每次检索的必经路径上。
+#
+# 已知盲区：count 单独用识别不了「删 N 条再加 N 条」——数量没变但内容变了。
+#   因此所有写路径（build_index_for_file / delete_by_sources / clear）都显式失效。
+#   单进程下这是严密的；多 worker 部署时别的进程写入本进程不会感知，
+#   故再叠一个 TTL 兜底，把最坏情况的陈旧窗口限制在 _CORPUS_TTL_SEC 内。
+_CORPUS_TTL_SEC = 60.0
 
 
-def _bm25_index(collection: str, all_chunks: list[dict]) -> BM25Index:
-    """取该 collection 的 BM25 索引；语料未变则直接复用缓存。
+@dataclass
+class _CorpusEntry:
+    count: int              # 建缓存时的 chunk 数，与 vector_store.count() 比对
+    expires_at: float
+    chunks: list[dict]
+    bm25: BM25Index
 
-    返回的索引其 doc_idx 与传入 all_chunks 的顺序一一对应，
-    因此调用方仍用同一份 all_chunks 派生的 id 列表做映射。
+
+_corpus_cache: dict[str, _CorpusEntry] = {}
+
+
+async def _load_corpus(settings: Settings) -> tuple[list[dict], BM25Index]:
+    """取该 collection 的全量 chunk 与 BM25 索引。
+
+    语料未变时直接复用缓存，不向 Milvus 取正文。
+    返回的 chunks 其顺序与 BM25 索引的 doc_idx 一一对应，
+    因此调用方仍用同一份 chunks 派生的 id 列表做映射。
     """
-    ids = [c["id"] for c in all_chunks]
-    fingerprint = (len(ids), max(ids) if ids else 0)
-    cached = _bm25_cache.get(collection)
-    if cached is not None and cached[0] == fingerprint:
-        return cached[1]
-    index = BM25Index([c["text"] for c in all_chunks])
-    _bm25_cache[collection] = (fingerprint, index)
-    return index
+    key = settings.milvus_collection
+    entry = _corpus_cache.get(key)
+    if entry is not None and entry.expires_at > time.monotonic():
+        if await vector_store.count(settings) == entry.count:
+            return entry.chunks, entry.bm25
+
+    chunks = await vector_store.get_all_chunks(settings)
+    entry = _CorpusEntry(
+        count=len(chunks),
+        expires_at=time.monotonic() + _CORPUS_TTL_SEC,
+        chunks=chunks,
+        bm25=BM25Index([c["text"] for c in chunks]),
+    )
+    _corpus_cache[key] = entry
+    return entry.chunks, entry.bm25
 
 
-def invalidate_bm25_cache(collection: str | None = None) -> None:
-    """显式失效缓存。正常情况靠指纹自动失效，这里用于 clear() 这类
-    「删表重建、id 可能从头开始」的场景做兜底。"""
+def invalidate_corpus_cache(collection: str | None = None) -> None:
+    """显式失效。所有写路径都要调——这是 count 指纹之外的第二道保险
+    （也是多 worker 场景下的唯一保险，见上方已知盲区）。"""
     if collection is None:
-        _bm25_cache.clear()
+        _corpus_cache.clear()
     else:
-        _bm25_cache.pop(collection, None)
+        _corpus_cache.pop(collection, None)
 
 
 async def search(
@@ -107,7 +141,8 @@ async def search(
     if top_k is None:
         top_k = settings.top_k
     await vector_store.ensure_collection(settings)
-    all_chunks = await vector_store.get_all_chunks(settings)
+    # 全量语料与 BM25 索引一起走缓存（语料未变时不向 Milvus 取正文）
+    all_chunks, bm25 = await _load_corpus(settings)
     if not all_chunks:
         return []
 
@@ -128,10 +163,9 @@ async def search(
         vector_ranked = await vector_store.search_by_vector(query_vec, search_k, settings)
         vector_scores = {vid: score for vid, score in vector_ranked}
 
-    # ---- BM25 关键词检索 ----（索引走缓存，语料未变时不再重复分词）
+    # ---- BM25 关键词检索 ----（索引与语料同源，已在 _load_corpus 里取好）
     bm25_ranked: list[int] = []
     if mode != "vector":
-        bm25 = _bm25_index(settings.milvus_collection, all_chunks)
         bm25_ranked = [ids[idx] for idx, _ in bm25.search(query, k=search_k)]
 
     # ---- 融合 ----
@@ -193,15 +227,18 @@ async def get_document_by_source(source: str, settings: Settings) -> dict:
 
 async def delete_by_sources(sources: set[str], settings: Settings) -> int:
     """删除指定来源（文件名）对应的 chunk。"""
-    return await vector_store.delete_by_sources(sources, settings)
+    n = await vector_store.delete_by_sources(sources, settings)
+    if n:
+        # 一条都没删掉说明语料没变，不必让缓存白白重建
+        invalidate_corpus_cache(settings.milvus_collection)
+    return n
 
 
 async def clear(settings: Settings) -> int:
     """清空知识库，返回删除的 chunk 数。"""
     n = await vector_store.clear(settings)
-    # 删表重建后 Milvus 主键可能从头开始，指纹会失效于「删了又建同样多」的场景，
-    # 这里显式清一次缓存兜底
-    invalidate_bm25_cache(settings.milvus_collection)
+    # 删表重建后 count 可能恰好回到同一个值，显式清一次缓存兜底
+    invalidate_corpus_cache(settings.milvus_collection)
     return n
 
 
