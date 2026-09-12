@@ -14,7 +14,8 @@
 
 ## 目录
 - `backend/`：core(配置/安全/依赖注入)、db(异步引擎)、models(ORM)、schemas(Pydantic)、repositories、services、agent、tools、api、alembic
-- `web/`：Vue 前端；`eval/`：评测集 + 脚本（Recall@8/5 = 100%）
+- `web/`：Vue 前端；`eval/`：评测集(104题检索/39题Agent) + 脚本，结果以 eval/*_result.json 为准（勿在文档里写死指标数字）
+- `examples/`：非主线的可选扩展（MCP / 多智能体 / LangGraph 对照），不启动不影响后端
 
 ## 关键规则
 - sql_query 工具只允许 SELECT（防 LLM 生成危险 SQL）
