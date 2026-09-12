@@ -29,4 +29,5 @@
 - Windows GBK 控制台打印 ✓/✗ 会 UnicodeEncodeError，用 ASCII
 
 ## 分支
-V2 架构重构在 `refactor/architecture` 分支（未合并 main）。
+`main` 就是 V2（全异步 + Milvus + JWT + Vue）。
+`refactor/architecture` 是 V2 重构过程中的旧分支，已完全包含在 main 里，无独有提交，可安全删除。
