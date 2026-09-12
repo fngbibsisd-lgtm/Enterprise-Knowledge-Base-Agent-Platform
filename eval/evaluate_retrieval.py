@@ -42,6 +42,10 @@ async def amain() -> int:
 
     total = len(pairs)
     recall5 = recall8 = 0
+    # 无答案题的 gold_keywords 为空，hit() 恒为 False，把它们算进分母会系统性压低
+    # Recall（曾经得出 98/104=94.2%，而正确答案是 98/99=99.0%）。检索层没有「拒答」
+    # 语义，这类题只能靠相似度阈值评估误召回率，故不计入 Recall。
+    answerable = 0
     year_total = year_correct = 0
     latencies: list[float] = []
     by_type: dict[str, dict] = {}
@@ -53,6 +57,9 @@ async def amain() -> int:
         typ = p.get("type", "其他")
         golds = p["gold_keywords"]
         exp_year = p.get("expected_year")
+        counted = bool(golds)
+        if counted:
+            answerable += 1
 
         t0 = time.time()
         sources = await rag.search(p["query"], settings)
@@ -80,10 +87,11 @@ async def amain() -> int:
         if hit8:
             recall8 += 1
 
-        st = by_type.setdefault(typ, {"hit5": 0, "hit8": 0, "total": 0})
+        st = by_type.setdefault(typ, {"hit5": 0, "hit8": 0, "total": 0, "answerable": 0})
         st["total"] += 1
         st["hit5"] += int(hit5)
         st["hit8"] += int(hit8)
+        st["answerable"] += int(counted)
 
         yt = "-" if year_ok is None else ("Y" if year_ok else "N")
         print(f"{typ:<12} {'Y' if hit8 else 'N':<6} {'Y' if hit5 else 'N':<9} "
@@ -91,17 +99,25 @@ async def amain() -> int:
 
     avg_lat = sum(latencies) / len(latencies) if latencies else 0
     print("\n" + "=" * 60)
-    print(f"  Recall@5         : {recall5}/{total} = {recall5 / total * 100:.1f}%")
-    print(f"  Recall@8         : {recall8}/{total} = {recall8 / total * 100:.1f}%")
-    print(f"  年份Top-1命中率   : {year_correct}/{year_total} = "
-          f"{(year_correct / year_total * 100 if year_total else 100):.1f}%")
+    print(f"  可答题数          : {answerable}/{total}（无答案 {total - answerable} 题不计入 Recall）")
+    print(f"  Recall@5         : {recall5}/{answerable} = "
+          f"{recall5 / answerable * 100 if answerable else 0:.1f}%")
+    print(f"  Recall@8         : {recall8}/{answerable} = "
+          f"{recall8 / answerable * 100 if answerable else 0:.1f}%")
+    # 一道年份题都没有时显示 — 而不是 100%：没测过不等于全对
+    year_line = (f"{year_correct}/{year_total} = {year_correct / year_total * 100:.1f}%"
+                 if year_total else "—（本次无年份题）")
+    print(f"  年份Top-1命中率   : {year_line}")
     print(f"  平均检索延迟      : {avg_lat:.0f} ms")
     print("=" * 60)
 
     print("\n分题型 Recall@8：")
     for typ, st in sorted(by_type.items()):
-        r = st["hit8"] / st["total"] * 100
-        print(f"  {typ:<12} {st['hit8']}/{st['total']} = {r:.1f}%")
+        if not st["answerable"]:
+            print(f"  {typ:<12} —（{st['total']} 题，无答案，不计入 Recall）")
+            continue
+        r = st["hit8"] / st["answerable"] * 100
+        print(f"  {typ:<12} {st['hit8']}/{st['answerable']} = {r:.1f}%")
 
     return 0
 
