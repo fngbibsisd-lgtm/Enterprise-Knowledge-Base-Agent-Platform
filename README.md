@@ -571,15 +571,3 @@ curl -X POST http://127.0.0.1:8000/chat/agent -H "Content-Type: application/json
 - **多 worker 下的 BM25 缓存**：现在是进程内缓存，多 worker 时每个 worker 各存一份
   （只影响首次命中，可接受）。要共享可挪到 Redis。
 - **生产向量库**：Milvus Lite 仅适合开发，生产切 standalone —— docker-compose 里已备好。
-
-
-## 版本规划
-
-| 版本 | 内容 | 状态 |
-|------|------|------|
-| V0.1 | 命令行 RAG 最小闭环（切片 → Embedding → FAISS → LLM） | ✅ |
-| V0.2 | FastAPI 后端（upload / chat / admin / status / MD5 判重） | ✅ |
-| V0.3 | Agent（Function Calling，knowledge_search + sql_query） | ✅ |
-| V0.4 | 工程化（Streamlit 前端、引用来源、MySQL、Docker、权限） | ✅ |
-| V2.0 | 主流架构重构（全异步 + SQLAlchemy/JWT/Milvus + Vue 前端） | ✅ |
-| V2.1 | 工程收口：评测体系（检索消融 + Agent 评测）、MCP 降级、BM25 缓存、SSE 流式 | ✅ |
