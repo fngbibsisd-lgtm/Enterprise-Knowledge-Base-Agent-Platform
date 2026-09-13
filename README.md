@@ -36,7 +36,8 @@
 - **部署与运行**：[Quick Start](#quick-start) → [API 接口](#api-接口) → [常见问题排查](#常见问题排查)。
 - **功能与边界**：[核心能力](#核心能力) → [已知限制](#已知限制)。
 - **技术设计**：[系统架构](#系统架构) → [核心技术](#核心技术) → [核心设计](#核心设计) → [Evaluation](#evaluation) → [Engineering Notes](#engineering-notes)。
-- **后续开发**：[项目结构](#项目结构) → [Future Work](#future-work)；逐模块设计、评测口径与设计问答见 [docs/技术设计文档.md](./docs/技术设计文档.md)。
+- **后续开发**：[项目结构](#项目结构) → [Future Work](#future-work)；逐模块设计、评测口径与设计问答另见
+  [架构与模块设计](./docs/architecture.md)、[评测体系](./docs/evaluation.md)、[工程笔记与设计问答](./docs/engineering-notes.md)。
 
 
 ## 演示
@@ -231,30 +232,16 @@ curl -X POST http://127.0.0.1:8000/chat/agent -H "Content-Type: application/json
 
 ## 常见问题排查
 
-### 启动与运行
-
 - **`ModuleNotFoundError: No module named 'backend'`**：后端必须在 `agent/` 根目录启动，`uvicorn backend.main:app` 依赖该工作目录。
 - **评测脚本抛出大段 pymilvus 堆栈**：Milvus Lite 单进程独占 `./milvus.db`，后端运行期间评测脚本无法连接。请先停止 `uvicorn` 再运行评测——脚本中的 `_explain()` 会将该异常转换为「请先停掉后端」的提示。
-- **端口被占用**：后端默认 8000，前端 5173，两者均需启动。
+- **返回「未找到相关信息」**：先确认该文档已成功入库（`GET /status` 查看 chunk 数）。若需针对某一份具体文档提问，**使用 `source` 指定它比更换关键词更有效**：指定来源时会跳过去重并将候选池放大到全量。
+- **LLM / embedding 报 Connection error**：请先检查系统代理残留——代理软件已关闭但系统代理仍启用时，`httpx` 仍会走代理。
+- **报 `Illegal uri`**：环境变量必须命名为 `MILVUS_DB_URI`。写成 `MILVUS_URI` 会被 pymilvus 当作服务端地址解析（该名称为其保留名）。
 - **无法登录**：默认账号 `admin` / `admin123`，首次启动时自动预置。
 
-### 检索与回答
-
-- **返回「未找到相关信息」**：先确认该文档已成功入库（`GET /status` 查看 chunk 数），再确认问法是否触发了年份策略（查询含年份时会将候选集放大到全量后软排序）。若需针对某一份具体文档提问，**使用 `source` 指定它比更换关键词更有效**：指定来源时会跳过去重并将候选池放大到全量。
-- **同一份文档返回多条片段**：指定 `source` 精查时按设计跳过了文档级去重——此模式下需回答的是「这份文档中哪一段命中了问题」，而非「哪几份文档相关」。
-- **来源面板编号与答案中的 `[n]` 不一致**：已知偏差，见 [已知限制](#已知限制) 最后两行。
-
-### 模型与网络
-
-- **LLM / embedding 报 Connection error**：请先检查系统代理残留——代理软件已关闭但系统代理仍启用时，`httpx` 仍会走代理。
-- **MCP 工具未出现**：属于预期降级，原因是 `mcp` 包未安装或 demo server 未启动，工具集会自动收缩；`examples/mcp` 下提供了可直接运行的 demo server。
-- **报 `Illegal uri`**：环境变量必须命名为 `MILVUS_DB_URI`。写成 `MILVUS_URI` 会被 pymilvus 当作服务端地址解析（该名称为其保留名）。
-- **模型答非所问或反复检索**：先检查 `tool_calls` 中的实际调用。Agent 最多 6 轮；连续检索无结果时，提示词要求其如实说明而非继续检索。
-
-### 数据与索引
-
-- **上传返回 409**：MD5 判重命中，说明内容完全相同的文件已在库中。
-- **需要清空知识库**：调用 `POST /admin/reset`，支持 `all` / `2h` / `12h` / `24h` 四种范围，仅 admin 可用。
+其余排查项：MCP 工具未出现属于预期降级（[Q13](./docs/engineering-notes.md#q13)）；
+「指定 `source` 时返回同文档多条片段」与「模型反复检索」分别是检索去重与执行循环的正常设计
+（见 [《架构与模块设计》](./docs/architecture.md) 3.6 / 4.3 节）；来源面板编号偏差见 [已知限制](#已知限制)。
 
 
 ## 隐私与安全
@@ -482,7 +469,7 @@ python eval/evaluate_agent.py                 # 写入 agent_eval_result.json
 
 裁判参照系的取舍（为何不能提供整篇文档、为何必须复现生产的截断与引文编号）、
 统一口径后连跑 8 次的复现记录，以及早期出现的 11/15 与 13/15 两组数字的成因，
-均见 [docs/技术设计文档.md](./docs/技术设计文档.md) 第 7.4 节。
+均见 [《评测体系》1.4 节](./docs/evaluation.md#sec-1-4)。
 
 ### 上下文预算：Agent 所需的资料未能送达
 
@@ -499,7 +486,7 @@ python eval/evaluate_agent.py                 # 写入 agent_eval_result.json
 「化学需氧量和二氧化硫排放量均要求分别减少 8%[8]」，正确率 14/15 → **15/15**。
 `eval/repro_context_budget.py` 的 53 条断言、104 题消融三个模式**逐位相同**的回归门禁，
 以及各项实测数据（5068 / 58306 字、BM25 排名、断言清单）见
-[docs/技术设计文档.md](./docs/技术设计文档.md)。
+[《架构与模块设计》4.3 节](./docs/architecture.md#sec-4-3)。
 
 ### 3. 语料缓存与检索延迟
 
@@ -558,40 +545,20 @@ python eval/evaluate_agent.py                 # 写入 agent_eval_result.json
 
 ```
 agent/
-├── backend/                    FastAPI 后端（全异步）
-│   ├── main.py                 入口：app 工厂 + CORS + lifespan（建表/预置admin/建collection/释放MCP）
-│   ├── core/                   config(Pydantic Settings) / security(JWT) / deps(依赖注入) / tool_output(工具结果预算+引文编号)
-│   ├── db/                     base(声明基类) + session(async 引擎)
-│   ├── models/                 ORM：User / UploadedFile / ChatHistory / AgentSession / AgentMessage
-│   ├── schemas/                Pydantic 请求响应模型
-│   ├── repositories/           数据访问层
-│   ├── services/               document(切片) / embedding / llm / bm25 / vector_store(Milvus) / rag ★
-│   ├── agent/                  tools.py(工具schema) + executor.py(Agent循环) ★
-│   ├── tools/                  search_document / query_database
-│   ├── api/                    auth / upload / chat / agent_chat / admin
-│   └── alembic/                数据库迁移
-├── web/                        Vue 3 前端
-│   ├── src/api/                axios 封装
-│   ├── src/stores/             Pinia（auth / chat）
-│   ├── src/views/              LoginView / ChatView
-│   └── src/components/         SideBar / MessageItem
-├── eval/                       评测：数据集 + 脚本 + 结果 JSON
-│   ├── qa_pairs.json           检索评测集（104 题）
-│   ├── agent_tasks.json        Agent 评测集（39 题）
-│   ├── generate_qa_pairs.py    从真实语料生成题目（带溯源校验）
-│   ├── evaluate_retrieval_ablation.py   检索消融 ★
-│   ├── evaluate_agent.py       Agent 评测 ★
-│   ├── render_results.py       把结果 JSON 渲染成 README 表格
-│   └── bench_search_latency.py 检索延迟构成 + 语料缓存基准
-├── examples/                   ★ 可选扩展（非主线）：MCP / 多智能体 / LangGraph 对照
-│   └── README.md               三个子包的作用、依赖与降级设计
-├── docs/                       技术设计文档
-├── scripts/                    辅助脚本
-│   └── test_backend.py         接口冒烟测试
-└── docker-compose.yml          Docker 部署（backend + mysql + milvus + nginx）
+├── backend/            FastAPI 后端（全异步）。其中主线两个文件：
+│   ├── services/rag.py      混合检索（向量 + BM25 → RRF → 去重 → 年份软排序）★
+│   ├── agent/executor.py    自研 Agent 执行循环 ★
+│   └── core/ db/ models/ schemas/ repositories/ services/ tools/ api/ alembic/
+├── web/                Vue 3 前端（src/{api,stores,views,components}）
+├── eval/               ★ 评测：104 题检索集 + 39 题 Agent 集 + 消融/评测/渲染/基准脚本
+├── examples/           ★ 可选扩展（非主线）：MCP / 多智能体 / LangGraph 对照
+├── docs/               文档集：架构 / 评测 / 工程笔记
+├── scripts/            辅助脚本（接口冒烟测试）
+└── docker-compose.yml  Docker 部署（backend + mysql + milvus + nginx）
 ```
 
-★ = 值得重点阅读的部分。主线仅为 `rag.py` 与 `executor.py` 两个文件，其余均为其支撑。
+★ = 值得重点阅读的部分。主线仅为 `rag.py` 与 `executor.py` 两个文件，其余均为其支撑；
+逐目录职责见 [《架构与模块设计》2.1 节](./docs/architecture.md#sec-2)。
 
 
 ## 已知限制
@@ -647,7 +614,7 @@ agent/
 - **生产向量库**：Milvus Lite 仅适用于开发环境，生产环境切换至 standalone——`docker-compose` 中已配置。
 - **可观测性**：检索与生成链路日志、指标埋点、A/B 评测。
 
-逐项的设计前提与更完整的优化清单见 [docs/技术设计文档.md](./docs/技术设计文档.md)。
+逐项的设计前提与更完整的优化清单见 [《工程笔记与设计问答》](./docs/engineering-notes.md)。
 
 
 ## License
