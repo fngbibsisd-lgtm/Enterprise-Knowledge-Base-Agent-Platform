@@ -10,8 +10,8 @@
   "judge_correct": 1.0,
   "judge_grounded": 1.0,
   "judge_n": 15,
-  "avg_latency_sec": 3.79,
-  "avg_iterations": 2.33,
+  "avg_latency_sec": 3.8,
+  "avg_iterations": 2.38,
   "mcp_required": 2,
   "mcp_passed": 2,
   "by_type": {
