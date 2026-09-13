@@ -1,17 +1,30 @@
 # 企业智能知识库 Agent 平台
 
-基于 **RAG 混合检索 + 手写 Function Calling Agent** 的企业知识库问答系统。
-上传 PDF/TXT 制度文档后，既可以用「RAG 模式」做带引用的文档问答，也可以用「Agent 模式」
-让 LLM 自主决定查文档还是查数据库——面向银行/企业制度检索 + 统计查询场景。
+基于 **RAG 混合检索 + 手写 Function Calling Agent** 的企业知识库问答系统，把「制度文档检索」和「结构化数据查询」放进同一个对话框。
+
+上传 PDF/TXT 制度文档后，有两种用法：
+
+- **RAG 模式**：固定走一次混合检索，答案带 `[id]` 引用来源。
+- **Agent 模式**：LLM 自己决定查文档还是查数据库、调几次工具，前端实时展示工具调用轨迹。
+
+面向银行/企业场景里最常见的两类问题——「某项制度是怎么规定的」和「现在有多少条记录」。
 
 核心是两件事：**混合检索的质量**（向量 + BM25 → RRF → 年份策略）和 **Agent 循环的自主性**（不依赖 LangChain/LangGraph，自己写完整循环）。其余能力（MCP / 多智能体 / LangGraph 对照实现）都在 `examples/`，是可插拔的扩展，不启动不影响主线。
 
 
-## Demo
+## 阅读导航
 
-> 📷 截图/GIF 待补：`docs/images/agent-mode.gif`（Agent 模式一次多工具调用过程）
+- **想把系统跑起来**：先看 [Quick Start](#quick-start)，接口细节见 [API 接口](#api-接口)，报错了查 [常见问题排查](#常见问题排查)。
+- **想看它能干什么**：[主要功能](#主要功能) 与 [兼容状态](#兼容状态)。
+- **想看技术深度**：[系统架构](#系统架构) → [核心技术](#核心技术) → [核心设计](#核心设计) → [Evaluation](#evaluation)。
+- **想看工程细节**：[Engineering Notes](#engineering-notes) 记了实际踩过并修掉的坑，[项目结构](#项目结构) 是目录树。
+- **想接着往下做**：[Future Work](#future-work) 按优先级列了明确知道该做但还没做的。
+- **最厚的一份文档**：[docs/技术文档与面试准备.md](./docs/技术文档与面试准备.md)（3 万字，逐模块设计 + 面试问答）。
 
-两种交互模式，同一个输入框：
+
+## 演示
+
+两种交互模式，同一个输入框。
 
 **RAG 模式** —— 固定走一次混合检索，答案带 `[id]` 引用：
 
@@ -26,32 +39,41 @@
 ```
 用户：最近上传了几个文件？
 
-  🔧 list_tables        → uploaded_files(id, filename, md5, size, status, created_at)
-  🔧 sql_query          → SELECT COUNT(*) FROM uploaded_files WHERE status='done'
-  ✔ 完成（2 轮迭代）
+  → list_tables   → uploaded_files(id, filename, md5, size, status, created_at)
+  → sql_query     → SELECT COUNT(*) FROM uploaded_files WHERE status='done'
+  → 完成（2 轮迭代）
 
 助手：当前知识库中共有 2 个文件处于已入库状态。
 ```
 
-本地跑起来看（两条命令，见 [Quick Start](#quick-start)）：
 
-```bash
-uvicorn backend.main:app --host 0.0.0.0 --port 8000   # 终端 1
-cd web && npm run dev                                  # 终端 2 → http://localhost:5173
-```
+## 主要功能
+
+- **混合检索**：Milvus 向量 + BM25（字符 bigram）→ RRF 融合 → 文档级去重 → 年份软排序；指定 `source` 精查某一份文档时跳过去重、并把候选池放大到全量。
+- **RAG 问答**：检索 + LLM 生成，返回答案并附引用来源与相关度。
+- **Agent 问答**：手写 Function Calling 循环，自主决定工具与轮数；SSE 流式吐出状态、工具调用与答案。
+- **工具集**：`knowledge_search`（混合检索，可指定文档与 `top_k`）、`get_document`（长文档分页读）、`list_tables`、`sql_query`（仅 SELECT）。
+- **工具降级**：工具集不可用时（MCP 掉线/未装）自动收缩，system prompt 随之改写，绝不诱导模型调用一个不存在的工具。
+- **上下文预算**：工具结果按工具分档截断（检索 6000 字 / 文档 10000 字），长文档用 `offset` 分页续读，引文编号整轮唯一。
+- **文档管理**：PDF/TXT 上传，MD5 判重（内容重复返回 409），切片 + 向量化入库。
+- **认证权限**：JWT（HS256）+ pbkdf2；admin/user 两角色，上传与重置限 admin。
+- **会话持久化**：Agent 多轮记忆落库，历史消息按窗口注入。
+- **全异步**：async SQLAlchemy + async OpenAI，IO 全程不阻塞事件循环。
+- **评测体系**：104 题检索消融 + 39 题 Agent 评测，指标全部由脚本跑出并落盘 JSON（见 [Evaluation](#evaluation)）。
 
 
-## 核心能力
+## 兼容状态
 
-| 能力 | 说明 |
-|------|------|
-| **混合检索** | Milvus 向量 + BM25（字符 bigram）→ RRF 融合 → 文档级去重（指定 `source` 精查时跳过）→ 年份软排序 |
-| **RAG 问答** | 检索 + LLM 生成，返回答案并附引用来源与相关度 |
-| **Agent 问答** | 手写 Function Calling 循环，自主决策工具与轮数，SSE 流式吐出思考/工具/答案 |
-| **工具降级** | 工具集不可用时（MCP 掉线/未装）自动收缩，system prompt 随之改写，绝不诱导模型调用不存在的工具 |
-| **文档管理** | PDF/TXT 上传，MD5 判重（重复 409），切片 + 向量化入库 |
-| **认证权限** | JWT（HS256）+ pbkdf2；admin/user 两角色，上传与重置限 admin |
-| **全异步** | async SQLAlchemy + async OpenAI，IO 全程不阻塞事件循环 |
+| 项目 | 当前状态 | 说明 |
+|---|---|---|
+| 运行平台 | Windows 为主要验证平台 | Linux / macOS 的代码路径未逐项验证；Windows 控制台下需 `PYTHONIOENCODING=utf-8`，否则打印 `✓`/`✗` 会 `UnicodeEncodeError` |
+| 向量库 | 开发用 Milvus Lite（本地文件 `./milvus.db`） | **单进程独占**：后端运行时评测脚本打不开同一个库；生产切 standalone，`docker-compose` 里已备好 |
+| 关系库 | MySQL 8.x，必需 | 非可选；启动时自动建表 |
+| 外部模型服务 | 需自备 DeepSeek + 硅基流动 API Key | 没有 Key 时 RAG / Agent 主线不可用（见 [隐私与安全](#隐私与安全)） |
+| MCP 工具 | 可选 | 未装 `mcp` 包、或 server 连不上时自动降级，不影响主线问答 |
+| 多智能体 / LangGraph | `examples/` 下的对照实现 | 非主线，不随主线一并演进 |
+| 输出脱敏 | 仅提示词层约束 | 代码级强制脱敏尚未实现 |
+| 前端来源面板编号 | 已知偏差 | 面板按数组下标显示 `【i+1】`，多次检索时可能与答案里的 `[n]` 错位（后端已把 `id` 放进 `sources` 事件） |
 
 
 ## 系统架构
@@ -117,6 +139,159 @@ flowchart TB
 ```
 
 
+## Quick Start
+
+### 环境要求
+
+Python 3.10+，MySQL 8.x，Node 18+。支持 Windows / Linux / macOS。
+
+### 1. 安装依赖
+
+```bash
+pip install -r backend/requirements.txt      # 后端（含可选的 mcp / langgraph）
+cd web && npm install                        # 前端
+```
+
+### 2. 配置 .env
+
+复制 `backend/.env.example` 为 `backend/.env`，填入自己的 Key 与密码：
+
+```ini
+LLM_MODEL=deepseek-chat
+LLM_API_KEY=sk-xxx
+LLM_BASE_URL=https://api.deepseek.com/v1
+
+EMBEDDING_MODEL=Qwen/Qwen3-VL-Embedding-8B
+EMBEDDING_API_KEY=sk-xxx
+EMBEDDING_BASE_URL=https://api.siliconflow.cn/v1
+
+MYSQL_HOST=127.0.0.1
+MYSQL_PORT=3306
+MYSQL_USER=root
+MYSQL_PASSWORD=你的mysql密码
+MYSQL_DATABASE=rag_agent
+
+# 生产务必改成至少 32 字符的随机串
+JWT_SECRET=请改成至少32字符的随机串
+
+# Milvus Lite 本地文件；生产 standalone 用 http://localhost:19530
+MILVUS_DB_URI=./milvus.db
+```
+
+### 3. 初始化 MySQL
+
+```bash
+mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS rag_agent DEFAULT CHARACTER SET utf8mb4;"
+```
+
+后端启动时自动建表；版本化迁移用 `alembic -c alembic.ini upgrade head`（在 `agent/` 根目录执行）。
+
+### 4. 启动
+
+```bash
+# 后端 —— 必须在 agent/ 根目录启动，否则 from backend.xxx 导入报错
+uvicorn backend.main:app --host 0.0.0.0 --port 8000
+
+# 前端（另开终端）
+cd web && npm run dev
+```
+
+后端 → http://localhost:8000/docs（Swagger）；前端 → http://localhost:5173（默认账号 `admin` / `admin123`）。
+前端通过 Vite 代理把 `/api/*` 转发到 8000，生产由 nginx 反代。
+
+Docker 一键起：`docker compose up --build`（自动拉起 MySQL / Milvus standalone / backend / nginx）。
+
+### 5. 灌语料 + 跑评测
+
+```bash
+python eval/download_docs.py                 # 下载 34 份 gov.cn 公开文档
+python eval/build_index.py                   # 建索引
+
+# 评测（需先停掉后端：Milvus Lite 单进程独占 ./milvus.db）
+python eval/evaluate_retrieval_ablation.py   # 检索消融
+python eval/evaluate_agent.py                # Agent 评测
+python eval/render_results.py                # 渲染成 Markdown 表格
+```
+
+
+## API 接口
+
+| 方法 | 路径 | 说明 | 权限 |
+|------|------|------|------|
+| GET | `/` | 根路由，欢迎信息 | 公开 |
+| GET | `/status` | 知识库索引状态 | 公开 |
+| POST | `/auth/login` | 登录，返回 JWT | 公开 |
+| POST | `/auth/register` | 注册（默认 user 角色） | 公开 |
+| POST | `/upload` | 上传 PDF/TXT（MD5 判重） | admin |
+| POST | `/chat` | RAG 问答，返回 answer + sources | 登录 |
+| POST | `/chat/agent` | Agent 问答，返回 answer + tool_calls + iterations | 登录 |
+| POST | `/chat/agent/stream` | Agent 问答（SSE 流式） | 登录 |
+| POST | `/admin/reset` | 重置知识库（all / 2h / 12h / 24h） | admin |
+
+```bash
+# 登录拿 token
+curl -X POST http://127.0.0.1:8000/auth/login -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"admin123"}'
+
+# Agent 问答（自主决定查文档还是查库）
+curl -X POST http://127.0.0.1:8000/chat/agent -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <token>" -d '{"query":"最近上传了几个文件？"}'
+```
+
+
+## 常见问题排查
+
+### 启动与运行
+
+- **`ModuleNotFoundError: No module named 'backend'`**：必须在 `agent/` 根目录启动后端，`uvicorn backend.main:app` 依赖这个工作目录。
+- **评测脚本报一大段 pymilvus 堆栈**：Milvus Lite 单进程独占 `./milvus.db`，后端开着的时候评测脚本连不上。先停掉 `uvicorn` 再跑评测——脚本里的 `_explain()` 会把这个异常翻译成「请先停掉后端」。
+- **某个端口被占用**：后端默认 8000，前端 5173，两者都要起。
+- **登录不进去**：默认账号 `admin` / `admin123`，首次启动时自动预置。
+
+### 检索与回答
+
+- **答「未找到相关信息」**：先确认这份文档真的入库了（`GET /status` 看 chunk 数），再看问法是否触发了年份策略（查询含年份会把候选集放大到全量再软排序）。要问某一份具体文档时，**用 `source` 指定它比换关键词有效得多**：指定来源时会跳过去重、把候选池放大到全量。
+- **同一份文档返回多条片段**：指定 `source` 精查时按设计跳过了文档级去重——那时要回答的是「这份文档里哪一句答到了问题」，不是「哪几份文档相关」。
+- **来源面板编号与答案里的 `[n]` 对不上**：已知偏差，见 [兼容状态](#兼容状态) 最后一行。
+
+### 模型与网络
+
+- **LLM / embedding 报 Connection error**：先查系统代理残留——代理软件关了但系统代理还开着，`httpx` 仍会走代理。
+- **MCP 工具没出现**：`mcp` 包未安装、或 demo server 没起，工具集自动收缩属预期降级；`examples/mcp` 下有可直接跑的 demo server。
+- **报 `Illegal uri`**：环境变量必须叫 `MILVUS_DB_URI`。写成 `MILVUS_URI` 会被 pymilvus 当作服务端地址解析（那是它的保留名）。
+- **模型答非所问或空转**：先看 `tool_calls` 里它调了什么。Agent 最多 6 轮，连续检索无果时 prompt 要求它如实告知而不是继续空转。
+
+### 数据与索引
+
+- **上传返回 409**：MD5 判重命中，说明内容完全相同的文件已在库里。
+- **想清空知识库**：`POST /admin/reset`，支持 `all` / `2h` / `12h` / `24h` 四种范围，仅 admin。
+
+
+## 隐私与安全
+
+**认证与凭据**
+
+- 密码用 `pbkdf2_hmac(sha256, 10 万次迭代)` 加 16 字节随机盐哈希，存成 `salt$hash`，不存明文。
+- JWT 默认 HS256、有效期 24 小时，密钥与算法都从配置读。
+- `.env` 已被 `.gitignore` 忽略，且本仓库历史中从未提交过真实 `.env`；`.env.example` 里全是占位符。
+- **部署前必须做两件事**：把 `JWT_SECRET` 换成至少 32 字符的随机串；改掉默认账号 `admin/admin123`。
+
+**数据流向（重要）**
+
+- 上传的文档会被切片后送往 **embedding 服务**（默认硅基流动）生成向量；提问时，检索到的片段会随 prompt 送往 **LLM 服务**（默认 DeepSeek）。
+- 也就是说：**不要把真实的敏感资料放进这个库**——它们会离开你的机器。全过程不联网的只有本地文件解析与切片。
+
+**SQL 与内部信息的边界**
+
+- `sql_query` 只允许**单条 SELECT**：非 SELECT 直接拒绝；`;` 后跟内容判定为多语句拒绝；关键字黑名单拦截 `INTO / LOAD_FILE / SLEEP / BENCHMARK / INFORMATION_SCHEMA / OUTFILE / DUMPFILE`；无 `LIMIT` 时自动补上并硬限 50 行；执行带 5 秒超时。
+- system prompt 另有一条约束：回答中不得出现表名、字段名、SQL、文件路径等内部标识符，一律用业务语言转述（说「目前共 2 份资料」而不是「`uploaded_files` 表里有 2 条记录」）。
+- **但这一条目前只是提示词约束，不是代码强制**，模型仍有可能违规输出。代码级输出脱敏在 [Future Work](#future-work) 里。
+
+**权限**
+
+- 上传与重置限 admin 角色；会话记录按用户隔离。
+
+
 ## 核心技术
 
 ### 1. 混合检索：RRF 融合而非加权求和
@@ -152,7 +327,7 @@ flowchart TB
 
 `backend/agent/executor.py` 是一个 `async generator`，自己维护 `messages` 与迭代计数，
 每轮把 `tools` schema 交给 LLM，解析 `tool_calls`、并发执行、把结果回灌后再决策，
-同时以 SSE 事件（`thinking` / `tool_call` / `tool_result` / `answer`）实时推给前端。
+同时以 SSE 事件（`status` / `tool_call` / `tool_result` / `answer`）实时推给前端。
 
 不用框架的原因：这条循环是 Agent 的全部工程细节所在——截断保护、超时、迭代上限、
 history 滑动窗口、工具异常如何回灌给模型、什么时候丢弃模型的前置思考——
@@ -393,6 +568,25 @@ JSON 必须合法、预算利用率不得因丢条而空置）、长文档可达
 这一项尚未优化，已记入 Future Work。
 
 
+## Engineering Notes
+
+实际踩过并修掉的坑，都留在代码注释里：
+
+- **Milvus Lite 是单进程独占的**。后端 `uvicorn` 开着时，评测脚本打不开 `./milvus.db`，
+  报出来的是一大段 pymilvus 堆栈，很容易被误当成代码 bug。
+  评测脚本因此都带 `_explain()`，把这个异常翻译成「请先停掉后端」。
+- **环境变量必须叫 `MILVUS_DB_URI`**。写成 `MILVUS_URI` 会被 pymilvus 当作服务端地址解析而报 `Illegal uri`——那是它的保留名。
+- **MCP 的 stdio 连接内部用 anyio task group**，`enter`/`exit` 必须在**同一个 asyncio task**，
+  否则报 `Attempted to exit cancel scope in a different task than it was entered in`。
+  而 `get_mcp_tools()` 是被各请求协程调用的，随请求结束而销毁，不能由它持有连接。
+  解法是用一个长驻后台任务独占连接（`_serve`），自己 enter 自己 exit，应用关闭时由 `close_mcp()` 通知退出。
+- **`mcp` 不能是主线的硬依赖**。原先 `tools.py` 直接 `from examples.mcp import mcp_client`，
+  没装 `mcp` 包的环境会导致**所有** Agent 请求挂掉，不只是 MCP 那部分功能。已改为捕获 `ImportError` 降级。
+- **系统代理残留**会导致 LLM/embedding 报 Connection error（代理软件关了但系统代理还在）。
+- **Windows GBK 控制台**打印 `✓`/`✗` 会 `UnicodeEncodeError`，脚本输出一律用 ASCII。
+- **必须从 `agent/` 根目录启动**后端，否则 `from backend.xxx` 导入失败。
+
+
 ## 项目结构
 
 ```
@@ -432,129 +626,16 @@ agent/
 ★ = 值得细看的部分。主线只有 `rag.py` 和 `executor.py` 两个文件，其余是它们的支撑。
 
 
-## Quick Start
-
-### 环境要求
-
-Python 3.10+，MySQL 8.x，Node 18+。支持 Windows / Linux / macOS。
-
-### 1. 安装依赖
-
-```bash
-pip install -r backend/requirements.txt      # 后端（含可选的 mcp / langgraph）
-cd web && npm install                        # 前端
-```
-
-### 2. 配置 .env
-
-复制 `backend/.env.example` 为 `backend/.env`，填入自己的 Key 与密码：
-
-```ini
-LLM_MODEL=deepseek-chat
-LLM_API_KEY=sk-xxx
-LLM_BASE_URL=https://api.deepseek.com/v1
-
-EMBEDDING_MODEL=Qwen/Qwen3-VL-Embedding-8B
-EMBEDDING_API_KEY=sk-xxx
-EMBEDDING_BASE_URL=https://api.siliconflow.cn/v1
-
-MYSQL_HOST=127.0.0.1
-MYSQL_PORT=3306
-MYSQL_USER=root
-MYSQL_PASSWORD=你的mysql密码
-MYSQL_DATABASE=rag_agent
-
-# 生产务必改成至少 32 字符的随机串
-JWT_SECRET=请改成至少32字符的随机串
-
-# Milvus Lite 本地文件；生产 standalone 用 http://localhost:19530
-MILVUS_DB_URI=./milvus.db
-```
-
-### 3. 初始化 MySQL
-
-```bash
-mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS rag_agent DEFAULT CHARACTER SET utf8mb4;"
-```
-
-后端启动时自动建表；版本化迁移用 `alembic -c alembic.ini upgrade head`（在 `agent/` 根目录执行）。
-
-### 4. 启动
-
-```bash
-# 后端 —— 必须在 agent/ 根目录启动，否则 from backend.xxx 导入报错
-uvicorn backend.main:app --host 0.0.0.0 --port 8000
-
-# 前端（另开终端）
-cd web && npm run dev
-```
-
-后端 → http://localhost:8000/docs（Swagger）；前端 → http://localhost:5173（默认账号 `admin` / `admin123`）。
-前端通过 Vite 代理把 `/api/*` 转发到 8000，生产由 nginx 反代。
-
-Docker 一键起：`docker compose up --build`（自动拉起 MySQL / Milvus standalone / backend / nginx）。
-
-### 5. 灌语料 + 跑评测
-
-```bash
-python eval/download_docs.py                 # 下载 34 份 gov.cn 公开文档
-python eval/build_index.py                   # 建索引
-
-# 评测（需先停掉后端：Milvus Lite 单进程独占 ./milvus.db）
-python eval/evaluate_retrieval_ablation.py   # 检索消融
-python eval/evaluate_agent.py                # Agent 评测
-python eval/render_results.py                # 渲染成 Markdown 表格
-```
-
-
-## API 接口
-
-| 方法 | 路径 | 说明 | 权限 |
-|------|------|------|------|
-| GET | `/` | 根路由，欢迎信息 | 公开 |
-| GET | `/status` | 知识库索引状态 | 公开 |
-| POST | `/auth/login` | 登录，返回 JWT | 公开 |
-| POST | `/auth/register` | 注册（默认 user 角色） | 公开 |
-| POST | `/upload` | 上传 PDF/TXT（MD5 判重） | admin |
-| POST | `/chat` | RAG 问答，返回 answer + sources | 登录 |
-| POST | `/chat/agent` | Agent 问答，返回 answer + tool_calls + iterations | 登录 |
-| POST | `/chat/agent/stream` | Agent 问答（SSE 流式） | 登录 |
-| POST | `/admin/reset` | 重置知识库（all / 2h / 12h / 24h） | admin |
-
-```bash
-# 登录拿 token
-curl -X POST http://127.0.0.1:8000/auth/login -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"admin123"}'
-
-# Agent 问答（自主决定查文档还是查库）
-curl -X POST http://127.0.0.1:8000/chat/agent -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <token>" -d '{"query":"最近上传了几个文件？"}'
-```
-
-
-## Engineering Notes
-
-实际踩过并修掉的坑，都留在代码注释里：
-
-- **Milvus Lite 是单进程独占的**。后端 `uvicorn` 开着时，评测脚本打不开 `./milvus.db`，
-  报出来的是一大段 pymilvus 堆栈，很容易被误当成代码 bug。
-  评测脚本因此都带 `_explain()`，把这个异常翻译成「请先停掉后端」。
-- **环境变量必须叫 `MILVUS_DB_URI`**。写成 `MILVUS_URI` 会被 pymilvus 当作服务端地址解析而报 `Illegal uri`——那是它的保留名。
-- **MCP 的 stdio 连接内部用 anyio task group**，`enter`/`exit` 必须在**同一个 asyncio task**，
-  否则报 `Attempted to exit cancel scope in a different task than it was entered in`。
-  而 `get_mcp_tools()` 是被各请求协程调用的，随请求结束而销毁，不能由它持有连接。
-  解法是用一个长驻后台任务独占连接（`_serve`），自己 enter 自己 exit，应用关闭时由 `close_mcp()` 通知退出。
-- **`mcp` 不能是主线的硬依赖**。原先 `tools.py` 直接 `from examples.mcp import mcp_client`，
-  没装 `mcp` 包的环境会导致**所有** Agent 请求挂掉，不只是 MCP 那部分功能。已改为捕获 `ImportError` 降级。
-- **系统代理残留**会导致 LLM/embedding 报 Connection error（代理软件关了但系统代理还在）。
-- **Windows GBK 控制台**打印 `✓`/`✗` 会 `UnicodeEncodeError`，脚本输出一律用 ASCII。
-- **必须从 `agent/` 根目录启动**后端，否则 `from backend.xxx` 导入失败。
-
-
 ## Future Work
 
 按优先级排序，都是当前**明确知道该做但还没做**的：
 
+- **代码级输出脱敏**：目前「不许泄露表名/字段名/SQL」只是 system prompt 里的一条约束，
+  模型仍可能违规。要做的是在 executor 出口做一层确定性替换（内部标识符 → 业务名）、
+  并给 `list_tables` 过滤掉 `agent_sessions` / `agent_messages` / `users` 这类内部表，
+  最后补一批脱敏评测用例，让「没泄露」变成可测的数字。
+- **前端来源面板用上 `id`**：答案里的 `[n]` 与面板序号错位，改 2 行即可（`s.id ?? i+1`，
+  并在 `types.ts` 的 `Source` 上加 `id?: number`）。
 - **年份策略的全量扫描开销**：把候选集放大到全量是为了让正确年份的文档能进 top-k，
   代价是 `search_by_vector` 从 49ms 涨到 1456ms（已实测，见 Evaluation 第 3 节）。
   可行的方向是用 Milvus 的标量过滤（`source like "%2024%"`）先缩小候选集再检索，
@@ -571,3 +652,8 @@ curl -X POST http://127.0.0.1:8000/chat/agent -H "Content-Type: application/json
 - **多 worker 下的 BM25 缓存**：现在是进程内缓存，多 worker 时每个 worker 各存一份
   （只影响首次命中，可接受）。要共享可挪到 Redis。
 - **生产向量库**：Milvus Lite 仅适合开发，生产切 standalone —— docker-compose 里已备好。
+
+
+## License
+
+[MIT](./LICENSE)
