@@ -28,6 +28,60 @@ _ENVELOPE_RESERVE = 300
 MAX_TOP_K = 10
 
 
+class ToolIdAllocator:
+    """给一次回答内所有工具结果分配全局唯一的引文编号。
+
+    为什么需要：rag.search 返回的 id 是「本次检索内的展示序号 1..n」（见 rag.py），
+    Agent 一次回答会调多次工具，每次都从 1 开始 → 答案里写 [4] 时，模型自己也说不清
+    指的是哪一篇；前端面板按数组下标显示【i+1】更是对不上。
+
+    为什么在**序列化之前**就地改：事后对 JSON 文本做 "id": 12 → "id": 3 的替换既不可靠
+    （数字会互相误伤），又会被截断坑到——"id": 12 被切成 "id": 1 就是静默错号。
+
+    编号只在一次 run_agent_stream 内唯一，不做跨轮次持久化。
+    """
+
+    def __init__(self) -> None:
+        self._next = 1
+        self.source_first_id: dict[str, int] = {}
+
+    def renumber(self, result) -> None:
+        """就地把结果里的引文 id 换成全局编号。"""
+        if not isinstance(result, dict):
+            return
+        sources = result.get("sources")
+        if isinstance(sources, list):
+            for item in sources:
+                if isinstance(item, dict) and item.get("source"):
+                    item["id"] = self._take(item["source"])
+        elif result.get("source") and result.get("found"):
+            # get_document 这类「单篇」结果也要发编号：S2 之后答案更可能来自它，
+            # 而它同样会进 sources 事件，不编号就与答案里的 [n] 对不上
+            result["id"] = self._take(result["source"])
+
+    def _take(self, source: str) -> int:
+        new_id = self._next
+        self._next += 1
+        self.source_first_id.setdefault(source, new_id)
+        return new_id
+
+    def id_of(self, source: str) -> int | None:
+        """该来源首次出现时拿到的编号（用于给前端 sources 事件标注）。"""
+        return self.source_first_id.get(source)
+
+
+def visible_ids(visible) -> list:
+    """从「模型真正看到的那份结果」里取出引文编号，供 trace 审计用。"""
+    if not isinstance(visible, dict):
+        return []
+    sources = visible.get("sources")
+    if isinstance(sources, list):
+        return [s.get("id") for s in sources if isinstance(s, dict) and s.get("id") is not None]
+    if visible.get("id") is not None:
+        return [visible["id"]]
+    return []
+
+
 def tool_result_limit(tool_name: str, settings) -> int:
     """某工具「整条结果」的字符预算。
 
@@ -80,8 +134,12 @@ def render_tool_result(name: str, result, settings) -> tuple[str, dict | None]:
 def _render_list_result(result: dict, limit: int) -> tuple[str, dict | None]:
     """逐条裁剪 sources，保证序列化结果不超过 limit 且始终是合法 JSON。
 
-    策略：先按「均分预算」把每条文本收紧，再逐条丢尾。每次都从**原文**重新截断
-    （不是在上一次的结果上再截），否则会叠出两层"...(已截断)"后缀、且文本被反复砍。
+    策略：按原始条数算出「每条能分到多少字」，把每条文本收紧到这个额度，再逐条丢尾。
+    两个容易搞错的点：
+      - 每次都从**原文**重新截断（不是在上一次结果上再截），否则会叠出两层"...(已截断)"后缀；
+      - per_text 只按**原始条数**算一次，丢条时**不**上调。若跟着上调，10 条 × 600 字的
+        真实场景会一路掉到 2 条（每条 2850 字额度只用了 600，白白空出 4500 字预算），
+        而正确答案是留下 8 条。
     条数 ≤ 10，外层最多重试 11 次，代价可忽略。
     """
     items = [dict(i) for i in result["sources"] if isinstance(i, dict)]
@@ -89,12 +147,16 @@ def _render_list_result(result: dict, limit: int) -> tuple[str, dict | None]:
     if total == 0:
         return truncate(serialize(result), limit), result
 
+    per_text = max(MIN_ITEM_TEXT_CHARS, (limit - _ENVELOPE_RESERVE) // total)
+    for item in items:
+        item["text"] = truncate(item.get("text", ""), per_text)
+
     for shown in range(total, 0, -1):
-        kept = items[:shown]
-        per_text = max(MIN_ITEM_TEXT_CHARS, (limit - _ENVELOPE_RESERVE) // shown)
-        for item in kept:
-            item["text"] = truncate(item.get("text", ""), per_text)
-        visible = {**result, "sources": kept, "summary": _trimmed_summary(result, shown, total)}
+        visible = {
+            **result,
+            "sources": items[:shown],
+            "summary": _trimmed_summary(result, shown, total),
+        }
         text = serialize(visible)
         if len(text) <= limit:
             return text, visible

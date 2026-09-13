@@ -14,6 +14,7 @@
     B 实检索预算  跑 rag.search，需要 Milvus + embedding API
     C 长文档可达  十二五规划里那句"减少8%"必须在工具返回文本内
     D source 精查 带 source 时不能因文档级去重/候选池过小把目标 chunk 挤掉
+    E 引文编号   编号整轮唯一、答案只引用存在的编号（会调一次 LLM）
 """
 import asyncio
 import json
@@ -80,6 +81,10 @@ def section_a(settings) -> None:
             check(f"{tag} 每条 text 非空", all(s.get("text") for s in parsed["sources"]))
             check(f"{tag} id 完整", [s["id"] for s in parsed["sources"]] == list(range(1, len(parsed["sources"]) + 1)))
             check(f"{tag} visible 与文本一致", serialize(visible) == text)
+            # 预算利用率：丢条是为了装下，不是为了省。若利用率过低说明丢条丢过头了
+            # （曾经 per_text 跟着条数上调，10 条 × 600 字会一路剩到 2 条）
+            used = len(text) / limit
+            check(f"{tag} 预算利用率 ≥70%", used >= 0.7, f"{used:.0%}")
 
     # 兜底预算：非结构化工具仍走 agent_tool_result_max_chars
     long_sql = {"success": True, "rows": [{"x": "数据" * 5000}], "row_count": 1}
@@ -153,6 +158,36 @@ async def section_d(settings) -> None:
         check(f"D[source 精查] 「{q[:16]}…」命中 {TARGET}", bool(hits), f"返回 {len(r)} 条，命中 {len(hits)} 条")
 
 
+async def section_e(settings) -> None:
+    """E 引文编号整轮唯一（要调一次 LLM，约几秒）。
+
+    直接跑一次完整的 run_agent，检查 trace 里的编号集合与答案里的 [n] 是否自洽——
+    这是三处改动合起来的端到端检查：预算没把资料切坏、检索能拿到目标、
+    编号在整轮里唯一且答案只引用存在的编号。
+    """
+    import re
+
+    from backend.agent.executor import run_agent
+
+    res = await run_agent("十二五规划里化学需氧量、二氧化硫排放分别减少多少?", settings, temperature=0)
+    trace = res.get("tool_calls", [])
+    calls = [c for c in trace if c.get("tool_name") in ("knowledge_search", "get_document")]
+    all_ids = [i for c in calls for i in (c.get("result_ids") or [])]
+    src_ids = [s.get("id") for s in res.get("sources", [])]
+    cited = sorted({int(n) for n in re.findall(r"\[(\d+)\]", res.get("answer") or "")})
+
+    check("E 有检索类工具调用", bool(calls), f"{[c['tool_name'] for c in calls]}")
+    check("E 编号跨调用不重复", len(all_ids) == len(set(all_ids)), f"{all_ids}")
+    check("E 编号从1连续", all_ids == list(range(1, len(all_ids) + 1)), f"{all_ids}")
+    check("E sources 的 id 都在 trace 里", all(i in all_ids for i in src_ids if i is not None), f"{src_ids}")
+    check("E 答案只引用存在的编号", all(n in all_ids for n in cited),
+          f"答案引用 {cited} / 实际编号 {sorted(set(all_ids))}")
+    # get_document 的编号（S2 之前它根本没有 id，引用它就只能瞎猜编号）
+    doc_ids = [i for c in calls if c["tool_name"] == "get_document" for i in (c.get("result_ids") or [])]
+    if doc_ids:
+        check("E get_document 结果带编号", bool(doc_ids), f"{doc_ids}")
+
+
 async def main() -> int:
     settings = get_settings()
     print("== A 预算不变量（合成数据）==")
@@ -162,8 +197,10 @@ async def main() -> int:
         await section_bc(settings)
         print("\n== D source 精查 ==")
         await section_d(settings)
+        print("\n== E 引文编号（会调 LLM）==")
+        await section_e(settings)
     except Exception as e:
-        check("B/C/D 执行", False, f"{type(e).__name__}: {e}")
+        check("B/C/D/E 执行", False, f"{type(e).__name__}: {e}")
 
     failed = [c for c in _checks if not c[1]]
     for name, ok, detail in _checks:

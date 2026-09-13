@@ -8,7 +8,7 @@ Agent 执行循环（异步，流式 ReAct）
         tool_call   决定调用工具      {type, name, arguments}
         tool_result 工具执行结果      {type, name, summary, found?, row_count?}
         answer      最终回答增量      {type, delta}
-        sources     引用来源清单      {type, sources: [{source, score}]}
+        sources     引用来源清单      {type, sources: [{id, source, score}]}
         done        结束             {type, answer, iterations, sources}
         error       出错             {type, message}
 
@@ -28,7 +28,13 @@ from openai import AsyncOpenAI
 
 from backend.agent.tools import get_all_tools
 from backend.core.config import Settings
-from backend.core.tool_output import render_tool_result, serialize, truncate
+from backend.core.tool_output import (
+    ToolIdAllocator,
+    render_tool_result,
+    serialize,
+    truncate,
+    visible_ids,
+)
 
 
 def create_agent_client(settings: Settings) -> AsyncOpenAI:
@@ -47,7 +53,7 @@ _RUNTIME_STATE_TOOLS = ("get_current_time", "get_system_info")
 
 # 每个手写工具在 prompt 里的一句话简介;未列出的(MCP 动态工具)回退用 schema 里的 description
 _TOOL_BRIEF = {
-    "knowledge_search": "knowledge_search: 搜索知识库文档(制度/流程/规定等),返回带编号 [id] 的文档片段",
+    "knowledge_search": "knowledge_search: 搜索知识库文档(制度/流程/规定等),返回带引用编号 [id] 的文档片段(编号在本次回答内全局唯一,引用时照抄)",
     "get_document": "get_document: 读取指定文档的内容(长文档分页,按返回的 has_more/next_offset 续读)",
     "list_tables": "list_tables: 查看数据库有哪些表及其字段结构",
     "sql_query": "sql_query: 查询结构化数据(仅SELECT),写SQL前先调用 list_tables 了解结构",
@@ -56,7 +62,7 @@ _TOOL_BRIEF = {
 # 与工具可用性无关的通用规则(编号里留出 1.5 的位置给运行时规则)
 _BASE_RULES = [
     "1. 严禁编造、严禁补充记忆:回答只能基于工具实际返回的内容;不要加入你自己知道、但检索结果里没有的细节(具体年份、数字、条款等,检索结果里没有就不得写出);没有相关信息的就如实说\"未找到相关信息\"",
-    "2. 引用标注:凡引用某条资料,用 [编号] 在对应位置标注,并在回答结尾列出引用来源",
+    "2. 引用标注:凡引用某条资料,用工具返回里的 id 以 [编号] 形式在对应位置标注(如 [3])。编号在本次回答内全局唯一,照抄即可,不要自己重新编号或按顺序猜;回答结尾列出引用来源",
     "3. 信息脱敏——严禁泄露内部实现细节:回答中不得出现数据库表名、字段名、SQL 语句、代码、函数/接口名、文件路径等内部标识符。一律用业务语言转述结论(如说\"目前共 2 份资料\",而不是\"uploaded_files 表里有 2 条记录\");引用来源时也只描述资料主题,不写表名/字段名",
     "4. 直接给出结论,不要复述你的检索/思考过程:禁止写\"我来帮你查找\"\"找到了某文档\"\"我来读取该文档\"之类的自我叙述,直接从\"根据/基于…\"开始作答",
     "5. 连续检索多次(≥2次)仍无结果时,如实告知用户,不要空转",
@@ -268,6 +274,7 @@ async def run_agent_stream(
 
     trace: list[dict] = []
     collected_sources: dict[str, float] = {}  # source -> score(去重)
+    ids = ToolIdAllocator()  # 引文编号:整轮回答唯一(rag 给的 id 只是单次检索内的序号)
 
     # 立即产出首个状态,避免用户面对空白干等
     yield {"type": "status", "message": "正在分析你的问题…"}
@@ -292,7 +299,12 @@ async def run_agent_stream(
         # 无工具调用 → 最终回答
         if tool_calls is None:
             full = "".join(answer_parts).strip() or "抱歉,模型未返回有效回答"
-            sources = [{"source": s, "score": round(v, 4)} for s, v in collected_sources.items()]
+            # 带上 id:前端来源面板可以直接对上答案里的 [n]
+            # (答案里若有 [7] 但面板只按顺序显示第 3 条,就是这里没给编号导致的错位)
+            sources = [
+                {"id": ids.id_of(s), "source": s, "score": round(v, 4)}
+                for s, v in collected_sources.items()
+            ]
             yield {"type": "sources", "sources": sources}
             yield {"type": "done", "answer": full, "iterations": i + 1,
                    "sources": sources, "trace": trace}
@@ -313,6 +325,9 @@ async def run_agent_stream(
         # 追加 assistant(tool_calls) + tool 消息,并按序产出 tool_result
         messages.append({"role": "assistant", "content": None, "tool_calls": tool_calls})
         for tc_id, name, args, result in results:
+            # 先重编号再渲染:渲染会截断/裁剪,截断后 "id": 12 可能只剩 "id": 1,
+            # 那时再改就已经错了(而且是静默的)
+            ids.renumber(result)
             serialized, visible = render_tool_result(name, result, settings)
             messages.append({"role": "tool", "tool_call_id": tc_id, "content": serialized})
 
@@ -326,8 +341,12 @@ async def run_agent_stream(
                 elif name == "get_document" and visible.get("found"):
                     collected_sources.setdefault(visible.get("source", ""), 0.0)
 
-            summary = _tool_summary(name, result)
-            trace.append({"tool_name": name, "arguments": args, "summary": summary})
+            # 摘要也取 visible:预算不够而裁剪时,摘要里的条数/字数要与模型真拿到的一致
+            # (get_document 的分页进度也靠它显示在前端)
+            summary = _tool_summary(name, visible if isinstance(visible, dict) else result)
+            # result_ids 记下「模型当时拿到哪些编号」,便于事后审计答案里的 [n] 指得对不对
+            trace.append({"tool_name": name, "arguments": args, "summary": summary,
+                          "result_ids": visible_ids(visible)})
             event: dict = {"type": "tool_result", "name": name, "summary": summary}
             if isinstance(result, dict):
                 if "found" in result:

@@ -30,7 +30,7 @@ from openai import AsyncOpenAI
 
 from backend.agent.executor import run_agent
 from backend.core.config import get_settings
-from backend.core.tool_output import render_tool_result
+from backend.core.tool_output import ToolIdAllocator, render_tool_result, serialize
 from backend.services import rag
 
 TASKS_FILE = os.path.join(os.path.dirname(__file__), "agent_tasks.json")
@@ -127,7 +127,7 @@ async def _replay_context(trace: list[dict], settings) -> str:
     参照系不能偏，两个方向都踩过坑：
       - 只给整篇文档的前若干字 → 把「确实检索到、只是超出截断窗口」的内容误判成编造；
       - 给整篇文档 → 把「文档里有、但 agent 根本没检索到」的编造当成有据可依。
-    所以这里走生产同一套工具函数 + 同一套序列化/截断（直接复用 executor 的实现），
+    所以这里走生产同一套工具函数 + 同一套序列化/截断/编号（直接复用生产实现），
     而不是自己再调一次 rag.search：后者在工具参数不合法时会「重搜成功」
     （例如少传 query 就用空串去搜，反而搜出一堆 agent 从未见过的资料，
     把失败调用伪装成有据可依，反过来冤枉 agent 漏答）。
@@ -135,6 +135,7 @@ async def _replay_context(trace: list[dict], settings) -> str:
     from backend.agent.tools import get_tool_map
 
     tool_map = get_tool_map()
+    ids = ToolIdAllocator()  # 与生产同一套编号：裁判看到的 [n] 必须与 agent 写下的一致
     parts: list[str] = []
     seen: set[str] = set()
     for call in trace:
@@ -147,13 +148,18 @@ async def _replay_context(trace: list[dict], settings) -> str:
             result = await fn(**args) if fn else {"error": f"未知工具: {name}"}
         except Exception as e:  # 复现 executor 的容错：参数不合法就是一次失败的调用
             result = {"error": f"工具执行失败: {e}"}
+        # 内容指纹必须在重编号**之前**取：重编号后相同内容因 id 不同而不再相等，
+        # 去重会失效，同一批资料会被重复塞进裁判上下文
+        fingerprint = serialize(result)
+        # 编号照常消耗（与生产完全一致），只是重复内容不再重复展示——
+        # 若为了去重而跳过编号，后面所有编号都会错位，裁判会以为 agent 引错了来源
+        ids.renumber(result)
+        if fingerprint in seen:
+            continue
+        seen.add(fingerprint)
         # 走生产同一套渲染（按工具预算分档 + 结构化逐条裁剪），否则裁判看到的
         # 会是「旧口径的部分资料」——比 agent 实际看到的多或者少，两个方向都会冤枉它
         serialized, _visible = render_tool_result(name, result, settings)
-        # 去重只能按内容：rag.search 的 id 是「本次检索内的展示序号 1..n」，跨调用重复
-        if serialized in seen:
-            continue
-        seen.add(serialized)
         parts.append(f"【工具调用 {name} 返回】{serialized}")
     return "\n\n".join(parts) if parts else "（无检索结果）"
 
@@ -299,6 +305,7 @@ async def amain() -> int:
             "tools_called": called,
             "cited_sources": cited_sources,
             "tool_args": [c.get("arguments") for c in result.get("tool_calls", [])],
+            "result_ids": [c.get("result_ids") for c in result.get("tool_calls", [])],
             "done": done_flag,
             "tool_ok": tool_flag,
             "cite_ok": cite_flag,
