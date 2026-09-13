@@ -19,7 +19,9 @@
 
 ## 关键规则
 - sql_query 工具只允许 SELECT（防 LLM 生成危险 SQL）
-- 混合检索：Milvus 向量 + BM25(bigram) → RRF 融合 → 文档去重 → 年份软排序
+- 混合检索：Milvus 向量 + BM25(bigram) → RRF 融合 → 文档去重 → 年份软排序（传 `source` 精查某文档时跳过去重并把候选池扩到全量）
+- Agent 工具结果按工具分档预算截断（`backend/core/tool_output.py`：搜索结果 6000 / 文档 10000 / 兜底 4000），
+  长文档用 `get_document(offset)` 分页续读；引文编号由 executor 重编号为整轮唯一
 - 年份是精确枚举值，用字符串匹配，不做向量相似度过滤
 - Agent 是手写 Function Calling 循环（面试亮点，勿换成框架）
 

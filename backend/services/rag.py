@@ -3,6 +3,9 @@ RAG 核心服务（异步）—— 切片 → 向量化 → Milvus + BM25 混合
 
 混合检索流程：
     向量检索(Milvus) + BM25 关键词检索 → RRF 融合 → 文档级去重 → 年份软排序
+
+其中「文档级去重」在指定 source 精查某一份文档时跳过（见 search 里的 scoped）：
+那时用户的意图是"读这一份"，去重会把同文档里真正答到问题的 chunk 丢掉。
 """
 import os
 import re
