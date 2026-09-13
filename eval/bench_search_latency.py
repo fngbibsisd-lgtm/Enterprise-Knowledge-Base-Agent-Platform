@@ -92,6 +92,8 @@ async def amain() -> int:
     # 分段口径必须与 rag.search 对齐：query 含年份时生产路径会把候选集放大到全量
     # （各年份公报正文雷同，正确年份常排不进默认 top_k），这里照做，否则测出来的
     # 向量检索耗时会被严重低估，跟热态总时长对不上。
+    # 注意：search_k 的公式在 rag.search（backend/services/rag.py）里还有一份，
+    # 改那边（如按 source 精查也要放大候选池）时记得同步这里，否则基准会悄悄失真。
     years = re.findall(r"20\d{2}", QUERY)
     search_k = chunks_n if years else settings.top_k
     m_vec, _ = await _timed_async(

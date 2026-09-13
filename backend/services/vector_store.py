@@ -61,16 +61,25 @@ async def add_chunks(chunks: list[dict], settings: Settings) -> int:
     return await asyncio.to_thread(_insert)
 
 
-async def search_by_vector(query_vec: list[float], top_k: int, settings: Settings) -> list[tuple[int, float]]:
-    """向量检索，返回 [(id, score)]，按 score 降序（COSINE 越高越相似）。"""
+async def search_by_vector(
+    query_vec: list[float], top_k: int, settings: Settings, source: str | None = None
+) -> list[tuple[int, float]]:
+    """向量检索，返回 [(id, score)]，按 score 降序（COSINE 越高越相似）。
+
+    source 非空时只在该来源（文件名）内检索：交给 Milvus 做服务端过滤，
+    比「全量召回后再自己筛」又快又准——后者要先取够大的 limit，
+    该文档的片段仍可能被别的文档挤出候选集。
+    """
     client = _client(settings.milvus_db_uri)
 
     def _search() -> list[tuple[int, float]]:
-        res = client.search(
-            settings.milvus_collection,
-            data=[query_vec],
-            limit=top_k,
-        )
+        # 不带 source 时**不传 filter 参数**（而不是传空串）：
+        # 空过滤表达式可能被 Milvus 走成另一条检索路径，实测会让年份策略的 MRR 动 0.0002。
+        # 不带 source 的路径（含 104 题消融）必须与改动前逐位相同。
+        kwargs: dict = {"data": [query_vec], "limit": top_k}
+        if source:
+            kwargs["filter"] = _in_expr("source", {source})
+        res = client.search(settings.milvus_collection, **kwargs)
         return [(h["id"], float(h["distance"])) for h in res[0]]
 
     return await asyncio.to_thread(_search)
@@ -87,7 +96,7 @@ async def get_chunks_by_source(source: str, settings: Settings) -> list[dict]:
         while True:
             rows = client.query(
                 settings.milvus_collection,
-                filter=f'source == "{source}"',
+                filter=_in_expr("source", {source}),
                 output_fields=["text", "source"],
                 offset=offset,
                 limit=page,
@@ -127,6 +136,7 @@ async def get_all_chunks(settings: Settings) -> list[dict]:
 
 
 def _in_expr(field: str, values: set[str]) -> str:
+    """构造 `field in ["a", "b"]` 过滤表达式（值里的引号转义，避免表达式注入）。"""
     quoted = ", ".join('"' + v.replace('"', '\\"') + '"' for v in values)
     return f"{field} in [{quoted}]"
 

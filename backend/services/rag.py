@@ -129,7 +129,8 @@ async def search(
     """混合检索，返回 [{id, source, text, preview, score}]。
 
     - top_k: 返回条数（默认 settings.top_k）
-    - source: 非空时仅返回该来源（文件名）的 chunk
+    - source: 非空时仅返回该来源（文件名）的 chunk。此时候选池会放大到全量、
+      且跳过我文档级去重（见下方 scoped），使「精查某份文档」真的能查到它自己的内容
     - mode:   检索策略，见 RETRIEVAL_MODES。默认 hybrid_year = 生产行为
     - verbose: 是否打印检索明细（评测/消融实验批量跑时关掉）
 
@@ -140,6 +141,7 @@ async def search(
         raise ValueError(f"未知检索模式: {mode}，可选 {RETRIEVAL_MODES}")
     if top_k is None:
         top_k = settings.top_k
+    source = (source or "").strip() or None  # 模型常带首尾空格，一空格之差就查不到
     await vector_store.ensure_collection(settings)
     # 全量语料与 BM25 索引一起走缓存（语料未变时不向 Milvus 取正文）
     all_chunks, bm25 = await _load_corpus(settings)
@@ -153,14 +155,19 @@ async def search(
     # 年份策略：查询含年份时把候选集放大到全量，因为各年份公报正文雷同，
     # 正确年份的文档常常排不进默认 top_k。仅 hybrid_year 模式启用。
     use_year_strategy = mode == "hybrid_year" and bool(years)
-    search_k = len(all_chunks) if use_year_strategy else settings.top_k
+    # 指定来源精查时同样要放大候选集：候选池若按 top_k 截断，是在「按来源过滤之前」就截的，
+    # 该文档的片段会被别的文档挤掉——问了具体某份文档却检索不到它自己的内容，就是这个原因。
+    scoped = settings.rag_source_scoped_search and bool(source)
+    search_k = len(all_chunks) if (use_year_strategy or scoped) else settings.top_k
 
     # ---- 向量检索 ----（bm25 模式不需要向量，省掉一次 embedding 调用）
     vector_ranked: list[tuple[int, float]] = []
     vector_scores: dict[int, float] = {}
     if mode != "bm25":
         query_vec = await embed_query(query, settings)
-        vector_ranked = await vector_store.search_by_vector(query_vec, search_k, settings)
+        vector_ranked = await vector_store.search_by_vector(
+            query_vec, search_k, settings, source=source if scoped else None
+        )
         vector_scores = {vid: score for vid, score in vector_ranked}
 
     # ---- BM25 关键词检索 ----（索引与语料同源，已在 _load_corpus 里取好）
@@ -177,6 +184,8 @@ async def search(
         fused_ids = rrf_fuse([vid for vid, _ in vector_ranked], bm25_ranked)
 
     # ---- 按融合顺序构建结果（按文档去重，避免大文件多 chunk 霸榜） ----
+    # 按来源精查时**不**去重：只留每篇一条会把同文档里真正答到问题的那条丢掉
+    # （实测：目标 chunk 的 BM25 排名是第 0，同文档另有一条排名更高，去重后目标被丢）
     results = []
     seen_sources = set()
     for cid in fused_ids:
@@ -187,7 +196,7 @@ async def search(
         chunk_source = chunk.get("source") or ""
         if source and chunk_source != source:
             continue
-        if not text or chunk_source in seen_sources:
+        if not text or (not scoped and chunk_source in seen_sources):
             continue
         seen_sources.add(chunk_source)
         results.append({
@@ -203,7 +212,9 @@ async def search(
     if use_year_strategy:
         results.sort(key=lambda r: 0 if any(y in r.get("source", "") for y in years) else 1)
 
-    # 稳定引文 id（1..n，对应最终展示顺序）
+    # 引文 id（1..n，对应**本次检索内**的展示顺序）。
+    # 它不是 chunk 身份：Agent 一次回答会调多次工具，每次都从 1 开始，跨调用必然重复。
+    # 进 messages 之前由 executor 统一重编号为「整轮唯一」，引用 [n] 才指得准。
     for i, r in enumerate(results, 1):
         r["id"] = i
 

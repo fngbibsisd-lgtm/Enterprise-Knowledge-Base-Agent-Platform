@@ -36,6 +36,9 @@ class Settings(BaseSettings):
 
     # ===== 检索 =====
     top_k: int = 8
+    # 指定 source 精查时放大候选池并跳过去重（见 rag.search 的 scoped）。
+    # 关掉即完全回到旧行为——线上异常时的软回滚阀门，比改代码回滚快。
+    rag_source_scoped_search: bool = True
 
     # ===== Agent =====
     agent_max_iterations: int = 6          # 工具调用最大轮数
