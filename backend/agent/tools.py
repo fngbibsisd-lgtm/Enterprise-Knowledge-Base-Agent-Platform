@@ -39,13 +39,21 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "get_document",
-            "description": "读取指定文档的完整内容,当需要某份文档的详细上下文时使用,参数 source 为文档文件名",
+            "description": (
+                "读取指定文档的内容,当需要某份文档的详细上下文时使用,参数 source 为文档文件名。"
+                "长文档会分页返回:返回里 total_chars 是全文长度,has_more 为 true 表示还有内容,"
+                "把返回的 next_offset 作为 offset 再次调用即可续读(不要自己算偏移)"
+            ),
             "parameters": {
                 "type": "object",
                 "properties": {
                     "source": {
                         "type": "string",
                         "description": "文档文件名,例如 '2024年工作报告.pdf'"
+                    },
+                    "offset": {
+                        "type": "integer",
+                        "description": "从第几个字符开始读,默认0(从头读);续读时直接传上一次返回的 next_offset"
                     }
                 },
                 "required": ["source"]

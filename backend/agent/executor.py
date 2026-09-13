@@ -48,7 +48,7 @@ _RUNTIME_STATE_TOOLS = ("get_current_time", "get_system_info")
 # 每个手写工具在 prompt 里的一句话简介;未列出的(MCP 动态工具)回退用 schema 里的 description
 _TOOL_BRIEF = {
     "knowledge_search": "knowledge_search: 搜索知识库文档(制度/流程/规定等),返回带编号 [id] 的文档片段",
-    "get_document": "get_document: 读取指定文档的完整内容",
+    "get_document": "get_document: 读取指定文档的内容(长文档分页,按返回的 has_more/next_offset 续读)",
     "list_tables": "list_tables: 查看数据库有哪些表及其字段结构",
     "sql_query": "sql_query: 查询结构化数据(仅SELECT),写SQL前先调用 list_tables 了解结构",
 }
@@ -61,6 +61,7 @@ _BASE_RULES = [
     "4. 直接给出结论,不要复述你的检索/思考过程:禁止写\"我来帮你查找\"\"找到了某文档\"\"我来读取该文档\"之类的自我叙述,直接从\"根据/基于…\"开始作答",
     "5. 连续检索多次(≥2次)仍无结果时,如实告知用户,不要空转",
     "6. 使用得体的中文与 Markdown 排版,重点术语用 **加粗**(加粗符须紧贴文字)",
+    "7. 长文档续读要有节制:get_document 返回 has_more=true 时,最多续读 2 次;同一份文档连续翻页超过 2 次仍未找到目标信息,就换检索词或基于已有内容作答,不要一直翻下去",
 ]
 
 

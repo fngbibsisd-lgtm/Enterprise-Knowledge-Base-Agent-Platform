@@ -90,7 +90,7 @@ def section_a(settings) -> None:
 
 
 async def section_bc(settings) -> str:
-    """B 实检索预算 + C 长文档可达性。返回 get_document 的正文供后续断句。"""
+    """B 实检索预算 + C 长文档可达性/分页自洽性。返回 get_document 的首页正文。"""
     from backend.tools.search_document import get_document_fn, knowledge_search_fn
 
     await vector_store.ensure_collection(settings)
@@ -101,11 +101,44 @@ async def section_bc(settings) -> str:
     check("B knowledge_search 有结果", bool(res.get("sources")), f"{len(res.get('sources', []))} 条")
     check("B 片段文本未被静默清空", all(s.get("text") for s in res.get("sources", [])))
 
-    doc = await get_document_fn(DOC)
-    check("C 目标文档读得到", doc.get("found"), DOC[:20])
-    check(f"C 返回文本含「{TARGET}」", TARGET in (doc.get("text") or ""),
-          f"返回 {len(doc.get('text') or '')} 字 / 全文 {doc.get('total_chars')} 字")
-    return doc.get("text") or ""
+    doc_limit = tool_result_limit("get_document", settings)
+    page = await get_document_fn(DOC)
+    check("C 目标文档读得到", page.get("found"), DOC[:20])
+    check(f"C 首页含「{TARGET}」", TARGET in (page.get("text") or ""),
+          f"返回 {len(page.get('text') or '')} 字 / 全文 {page.get('total_chars')} 字")
+    check("C 序列化不超预算", len(serialize(page)) <= doc_limit,
+          f"{len(serialize(page))} / {doc_limit}")
+
+    # 分页自洽：逐页走完，拼接结果必须与全文逐字相同（不重不漏不跳字）
+    total = page.get("total_chars") or 0
+    check("C 分页元信息齐全", isinstance(total, int) and total > 0 and isinstance(page.get("has_more"), bool))
+    check("C offset=0 时 next_offset == 返回字数", page.get("next_offset") == page.get("returned_chars"),
+          f"next_offset={page.get('next_offset')} returned={page.get('returned_chars')}")
+    full = (await rag.get_document_by_source(DOC, settings)).get("text", "").strip()
+    check("C total_chars 等于实际全文长度", total == len(full), f"{total} vs {len(full)}")
+    parts, cur, guard = [], page, 0
+    while True:
+        parts.append(cur.get("text") or "")
+        guard += 1
+        if not cur.get("has_more") or guard > 30:
+            break
+        cur = await get_document_fn(DOC, offset=cur["next_offset"])
+        if cur.get("offset") != sum(len(p) for p in parts):
+            break  # 偏移错位，下面的拼接比对会报出来
+    joined = "".join(parts)
+    check("C 逐页走完能拼回全文", joined == full, f"拼接 {len(joined)} 字 / 全文 {len(full)} 字, {guard} 页")
+    check("C 末端 has_more 为 false", cur.get("has_more") is False)
+
+    # 非法 offset 必须钳住而不是抛错（抛错会白烧一轮迭代）
+    for bad in (-5, total + 9999, "abc", None, "1000.0"):
+        try:
+            r = await get_document_fn(DOC, offset=bad)
+            ok = r.get("found") and isinstance(r.get("offset"), int) and 0 <= r["offset"] <= total
+        except Exception as e:
+            ok = False
+            r = {"offset": f"{type(e).__name__}: {e}"}
+        check(f"C 非法 offset={bad!r} 被钳住", ok, f"→ offset={r.get('offset')}")
+    return page.get("text") or ""
 
 
 async def section_d(settings) -> None:
