@@ -28,8 +28,9 @@ os.chdir(PROJECT_ROOT)
 
 from openai import AsyncOpenAI
 
-from backend.agent.executor import _serialize, _truncate, run_agent
+from backend.agent.executor import run_agent
 from backend.core.config import get_settings
+from backend.core.tool_output import render_tool_result
 from backend.services import rag
 
 TASKS_FILE = os.path.join(os.path.dirname(__file__), "agent_tasks.json")
@@ -146,7 +147,9 @@ async def _replay_context(trace: list[dict], settings) -> str:
             result = await fn(**args) if fn else {"error": f"未知工具: {name}"}
         except Exception as e:  # 复现 executor 的容错：参数不合法就是一次失败的调用
             result = {"error": f"工具执行失败: {e}"}
-        serialized = _truncate(_serialize(result), settings.agent_tool_result_max_chars)
+        # 走生产同一套渲染（按工具预算分档 + 结构化逐条裁剪），否则裁判看到的
+        # 会是「旧口径的部分资料」——比 agent 实际看到的多或者少，两个方向都会冤枉它
+        serialized, _visible = render_tool_result(name, result, settings)
         # 去重只能按内容：rag.search 的 id 是「本次检索内的展示序号 1..n」，跨调用重复
         if serialized in seen:
             continue

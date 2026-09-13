@@ -40,10 +40,14 @@ class Settings(BaseSettings):
     # ===== Agent =====
     agent_max_iterations: int = 6          # 工具调用最大轮数
     agent_max_history: int = 12            # 多轮对话保留的最近消息条数（滑动窗口）
-    agent_tool_result_max_chars: int = 4000  # 单条工具结果最大字符数（截断保护）
+    # 工具结果字符预算：按工具分档，见 core/tool_output.py。均可在 .env 里覆盖，
+    # 出问题时不改代码就能调回旧值（如全设 4000 即回到改动前行为）
+    agent_search_result_max_chars: int = 6000    # knowledge_search 整条结果预算（含 5-8 个片段）
+    agent_document_result_max_chars: int = 10000  # get_document 整条结果预算（单篇文档，支持分页）
+    agent_tool_result_max_chars: int = 4000      # 兜底预算：sql_query/list_tables/MCP 动态工具
     agent_sql_max_rows: int = 50           # sql_query 最大返回行数（自动补 LIMIT）
     agent_sql_timeout_sec: float = 5.0     # sql_query 执行超时（秒）
-    agent_top_k: int = 5                   # knowledge_search 默认返回条数
+    agent_top_k: int = 8                   # knowledge_search 默认返回条数（上限见 tool_output.MAX_TOP_K）
 
     # ===== 存储路径 =====
     data_dir: str = "./data"

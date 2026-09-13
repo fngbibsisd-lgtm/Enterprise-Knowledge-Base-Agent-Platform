@@ -24,7 +24,7 @@ TOOLS = [
                     },
                     "top_k": {
                         "type": "integer",
-                        "description": "返回的文档条数,默认5,最多10"
+                        "description": "返回的文档条数,默认8,最多10"
                     },
                     "source": {
                         "type": "string",

@@ -17,7 +17,7 @@ Agent 执行循环（异步，流式 ReAct）
 要点：
     - 所有 LLM 调用走 stream=True，实时解析 content / tool_calls 增量
     - 多个 tool_calls 用 asyncio.gather 并行执行
-    - 工具结果统一截断（agent_tool_result_max_chars），防止上下文爆炸
+    - 工具结果按「每个工具一条预算」渲染并截断（core/tool_output.py），防止上下文爆炸
     - 多轮记忆：system + 最近 N 条历史 + 当前问题
 """
 import asyncio
@@ -28,6 +28,7 @@ from openai import AsyncOpenAI
 
 from backend.agent.tools import get_all_tools
 from backend.core.config import Settings
+from backend.core.tool_output import render_tool_result, serialize, truncate
 
 
 def create_agent_client(settings: Settings) -> AsyncOpenAI:
@@ -116,18 +117,17 @@ def build_system_prompt(tools_schema: list[dict]) -> str:
 
 
 def _truncate(text: str, limit: int) -> str:
-    """把工具结果截断到 limit 字符,防止撑爆上下文。"""
-    text = (text or "").strip()
-    if len(text) <= limit:
-        return text
-    return text[:limit] + f"...(已截断,原文{len(text)}字)"
+    """把工具结果截断到 limit 字符(实现见 core/tool_output.py)。
+
+    保留这个名字是给外部用的:评测脚本 `eval/evaluate_agent.py` 直接 import 它来复现
+    生产截断——重放若不复现截断,裁判就会看到 Agent 从未看到的资料,反过来冤枉它"漏答"。
+    """
+    return truncate(text, limit)
 
 
 def _serialize(result) -> str:
-    """把工具返回结果转成字符串(dict 转 JSON)。"""
-    if isinstance(result, dict):
-        return json.dumps(result, ensure_ascii=False, default=str)
-    return str(result)
+    """把工具返回结果转成字符串(dict 转 JSON)。实现见 core/tool_output.py。"""
+    return serialize(result)
 
 
 _TOOL_ACTIONS = {
@@ -312,16 +312,18 @@ async def run_agent_stream(
         # 追加 assistant(tool_calls) + tool 消息,并按序产出 tool_result
         messages.append({"role": "assistant", "content": None, "tool_calls": tool_calls})
         for tc_id, name, args, result in results:
-            serialized = _truncate(_serialize(result), settings.agent_tool_result_max_chars)
+            serialized, visible = render_tool_result(name, result, settings)
             messages.append({"role": "tool", "tool_call_id": tc_id, "content": serialized})
 
-            # 收集引文来源(knowledge_search / get_document)
-            if isinstance(result, dict):
-                if name == "knowledge_search" and result.get("found"):
-                    for s in result.get("sources", []):
+            # 收集引文来源(knowledge_search / get_document)。
+            # 注意是从 visible(模型真正看到的那份)而不是 result 收集:预算不够时渲染会丢掉
+            # 尾部条目,按原始 result 收会让 UI 列出模型根本没看到的文档。
+            if isinstance(visible, dict):
+                if name == "knowledge_search" and visible.get("found"):
+                    for s in visible.get("sources", []):
                         collected_sources.setdefault(s.get("source", ""), float(s.get("score", 0.0)))
-                elif name == "get_document" and result.get("found"):
-                    collected_sources.setdefault(result.get("source", ""), 0.0)
+                elif name == "get_document" and visible.get("found"):
+                    collected_sources.setdefault(visible.get("source", ""), 0.0)
 
             summary = _tool_summary(name, result)
             trace.append({"tool_name": name, "arguments": args, "summary": summary})
