@@ -28,29 +28,34 @@ os.chdir(PROJECT_ROOT)
 
 from openai import AsyncOpenAI
 
-from backend.agent.executor import run_agent
+from backend.agent.executor import _serialize, _truncate, run_agent
 from backend.core.config import get_settings
 from backend.services import rag
 
 TASKS_FILE = os.path.join(os.path.dirname(__file__), "agent_tasks.json")
 
-# 拒答判定关键词（agent 应明确说"查不到"而非编造）
-REFUSAL_MARKERS = ("未找到", "无法", "没有相关", "没有找到", "不清楚", "抱歉", "无相关", "无法回答", "没有相关")
+# 拒答判定关键词（agent 应明确说"查不到/做不到"而非编造）
+# 注意：这是关键词启发式，措辞漏一个就会把「老实拒答」记成失败
+# （例如 agent 答"写诗不在我的能力范围内…没法进行文学创作"就漏过「无法」）。
+REFUSAL_MARKERS = (
+    "未找到", "没有找到", "无法", "没法", "不能提供", "不清楚", "抱歉",
+    "没有相关", "无相关", "不在我的能力范围", "超出我的能力范围",
+)
 
 JUDGE_PROMPT = """你是严格的评测裁判，判断一个企业知识库 Agent 的回答质量。
 
 【用户问题】
 {query}
 
-【金标准上下文】（知识库正确检索到的资料）
+【Agent 检索到的资料】（Agent 回答时实际拿到的工具返回内容）
 {context}
 
 【Agent 回答】
 {answer}
 
 请从两个维度判断（只输出 JSON，不要输出其他内容）：
-1. correct：回答是否准确回答了问题，且关键结论与金标准上下文一致（无冲突/无错误）？
-2. grounded：回答是否完全基于上下文、没有编造上下文里不存在的事实（无幻觉）？
+1. correct：回答是否准确回答了问题，且关键结论与给定资料一致（无冲突/无错误）？
+2. grounded：回答中的事实是否都能在给定资料中找到——资料里没有的一律算编造（无幻觉）？
 
 输出格式：{{"correct": true或false, "grounded": true或false, "reason": "一句话原因"}}
 """
@@ -62,6 +67,36 @@ def _is_timeout_or_error(answer: str) -> bool:
 
 def _is_refusal(answer: str) -> bool:
     return any(m in answer for m in REFUSAL_MARKERS)
+
+
+REFUSAL_JUDGE_PROMPT = """这是一个企业知识库 Agent 面对库外问题的回答。
+
+【用户问题】
+{query}
+
+【Agent 回答】
+{answer}
+
+这个回答是否属于"拒绝作答"——即明确表示自己查不到/做不到、没有给出针对该问题的实质内容？
+（措辞不重要：说"未找到""没这个能力""帮不上忙""不在我的职责范围"都算；只要没有编造或硬答就不算失败）
+
+只输出 JSON：{{"refused": true或false, "reason": "一句话"}}
+"""
+
+
+async def _judge_refusal(client, settings, query: str, answer: str) -> bool:
+    """关键词没命中时的兜底判定：拒绝的措辞每轮都不一样，光靠关键词表会漏。"""
+    jr = await client.chat.completions.create(
+        model=settings.llm_model,
+        messages=[{"role": "user", "content": REFUSAL_JUDGE_PROMPT.format(query=query, answer=answer)}],
+        temperature=0,
+    )
+    text = jr.choices[0].message.content or ""
+    m = re.search(r"\{.*\}", text, re.S)
+    try:
+        return bool(json.loads(m.group(0) if m else text).get("refused"))
+    except json.JSONDecodeError:
+        return "true" in text.lower()
 
 
 def _parse_judge(text: str) -> dict:
@@ -85,15 +120,38 @@ def _parse_judge(text: str) -> dict:
     return {"correct": correct, "grounded": grounded, "reason": obj.get("reason", "")}
 
 
-def _build_context(sources: list[dict], max_sources: int = 5, max_chars: int = 1000) -> str:
-    parts = []
-    for s in sources[:max_sources]:
-        text = (s.get("text") or "").strip()
-        if not text:
+async def _replay_context(trace: list[dict], settings) -> str:
+    """重放 agent 当时的工具调用，重建裁判的参照系 = agent 实际看到的工具返回。
+
+    参照系不能偏，两个方向都踩过坑：
+      - 只给整篇文档的前若干字 → 把「确实检索到、只是超出截断窗口」的内容误判成编造；
+      - 给整篇文档 → 把「文档里有、但 agent 根本没检索到」的编造当成有据可依。
+    所以这里走生产同一套工具函数 + 同一套序列化/截断（直接复用 executor 的实现），
+    而不是自己再调一次 rag.search：后者在工具参数不合法时会「重搜成功」
+    （例如少传 query 就用空串去搜，反而搜出一堆 agent 从未见过的资料，
+    把失败调用伪装成有据可依，反过来冤枉 agent 漏答）。
+    """
+    from backend.agent.tools import get_tool_map
+
+    tool_map = get_tool_map()
+    parts: list[str] = []
+    seen: set[str] = set()
+    for call in trace:
+        name = call.get("tool_name")
+        if name not in ("knowledge_search", "get_document"):
+            continue  # 其余工具（sql_query 等）不返回文档正文，与裁判无关
+        args = call.get("arguments") or {}
+        fn = tool_map.get(name)
+        try:
+            result = await fn(**args) if fn else {"error": f"未知工具: {name}"}
+        except Exception as e:  # 复现 executor 的容错：参数不合法就是一次失败的调用
+            result = {"error": f"工具执行失败: {e}"}
+        serialized = _truncate(_serialize(result), settings.agent_tool_result_max_chars)
+        # 去重只能按内容：rag.search 的 id 是「本次检索内的展示序号 1..n」，跨调用重复
+        if serialized in seen:
             continue
-        if len(text) > max_chars:
-            text = text[:max_chars] + "…"
-        parts.append(f"【{s.get('source', '')}】{text}")
+        seen.add(serialized)
+        parts.append(f"【工具调用 {name} 返回】{serialized}")
     return "\n\n".join(parts) if parts else "（无检索结果）"
 
 
@@ -143,6 +201,7 @@ async def amain() -> int:
     iterations: list[int] = []
     judge_failed = 0
     grounded_failures: list[tuple[str, str]] = []
+    task_details: list[dict] = []
     by_type: dict[str, dict] = {}
     mcp_total = mcp_ok = 0
 
@@ -189,29 +248,28 @@ async def amain() -> int:
             cite_flag = any(any(k in s for s in cited_sources) for k in golds)
             cite_ok += int(cite_flag)
 
-        # 4) 拒答正确率
+        # 4) 拒答正确率（关键词命中即算；未命中交给裁判兜底，避免措辞变化漏判）
         refuse_flag = None
         if typ == "拒答":
             refuse_total += 1
-            refuse_flag = _is_refusal(answer)
+            if _is_refusal(answer):
+                refuse_flag = True
+            else:
+                try:
+                    refuse_flag = await _judge_refusal(judge_client, settings, query, answer)
+                except Exception:
+                    refuse_flag = False
             refuse_ok += int(refuse_flag)
 
         # 5) LLM 裁判（文档类）
         judge_flag = None
+        verdict: dict = {}
+        context = ""
         if typ == "文档问答":
             judge_total += 1
             try:
-                # 用 agent 实际引用的来源(全文)重建上下文,而不是重新 top-k 搜索,
-                # 否则裁判的参照系比 agent 实际检索到的窄,会把"确实检索到"的内容误判成编造
-                ctx_parts = []
-                for src in cited_sources[:5]:
-                    doc = await rag.get_document_by_source(src, settings)
-                    text = (doc.get("text") or "").strip()
-                    if len(text) > 2000:
-                        text = text[:2000] + "…"
-                    if text:
-                        ctx_parts.append(f"【{src}】{text}")
-                context = "\n\n".join(ctx_parts) if ctx_parts else "（无检索结果）"
+                # 重放 agent 当时的检索调用，裁判参照系 = agent 实际看到的 chunk
+                context = await _replay_context(result.get("tool_calls", []), settings)
                 jr = await judge_client.chat.completions.create(
                     model=settings.llm_model,
                     messages=[{"role": "user", "content": JUDGE_PROMPT.format(
@@ -227,6 +285,25 @@ async def amain() -> int:
             except Exception as e:
                 judge_flag = "ERR"
                 judge_failed += 1
+                verdict = {"correct": None, "grounded": None, "reason": f"裁判失败: {e}"}
+                context = ""
+
+        # 5b) 每题明细落盘，便于事后审计（含裁判的完整输入，不靠记忆复述）
+        task_details.append({
+            "type": typ,
+            "query": query,
+            "answer": answer,
+            "tools_called": called,
+            "cited_sources": cited_sources,
+            "tool_args": [c.get("arguments") for c in result.get("tool_calls", [])],
+            "done": done_flag,
+            "tool_ok": tool_flag,
+            "cite_ok": cite_flag,
+            "refuse_ok": refuse_flag,
+            "judge": verdict,
+            "context_chars": len(context),
+            "context": context,
+        })
 
         # 6) 分题型统计（供 README 表格引用）
         st = by_type.setdefault(typ, {"n": 0, "done": 0, "tool": 0, "tool_n": 0})
@@ -307,6 +384,13 @@ async def amain() -> int:
     with open(result_file, "w", encoding="utf-8") as f:
         json.dump(summary, f, ensure_ascii=False, indent=2)
     print(f"\n结果已写入 {os.path.relpath(result_file, PROJECT_ROOT)}")
+
+    # 每题明细单独落盘：含答案、工具参数、裁判判词与其看到的资料原文，
+    # 便于复核判词是否成立（避免只凭汇总数字反推，也避免事后靠记忆复述）
+    detail_file = os.path.join(os.path.dirname(__file__), "agent_eval_detail.json")
+    with open(detail_file, "w", encoding="utf-8") as f:
+        json.dump(task_details, f, ensure_ascii=False, indent=2)
+    print(f"每题明细已写入 {os.path.relpath(detail_file, PROJECT_ROOT)}")
 
     if grounded_failures:
         print("\n忠实性未通过明细（裁判判定存在幻觉/未基于上下文）：")

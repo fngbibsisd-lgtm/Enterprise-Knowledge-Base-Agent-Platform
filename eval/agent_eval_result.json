@@ -1,0 +1,54 @@
+{
+  "total": 39,
+  "completion_rate": 1.0,
+  "tool_selection_rate": 1.0,
+  "tool_selection_n": 33,
+  "citation_hit_rate": 1.0,
+  "citation_hit_n": 18,
+  "refusal_accuracy": 1.0,
+  "refusal_n": 6,
+  "judge_correct": 0.9333,
+  "judge_grounded": 1.0,
+  "judge_n": 15,
+  "avg_latency_sec": 3.7,
+  "avg_iterations": 2.41,
+  "mcp_required": 2,
+  "mcp_passed": 2,
+  "by_type": {
+    "多工具协作": {
+      "n": 3,
+      "completion": 1.0,
+      "tool_selection": 1.0
+    },
+    "工具链": {
+      "n": 3,
+      "completion": 1.0,
+      "tool_selection": 1.0
+    },
+    "拒答": {
+      "n": 6,
+      "completion": 1.0,
+      "tool_selection": null
+    },
+    "文档问答": {
+      "n": 15,
+      "completion": 1.0,
+      "tool_selection": 1.0
+    },
+    "结构自省": {
+      "n": 3,
+      "completion": 1.0,
+      "tool_selection": 1.0
+    },
+    "统计问答": {
+      "n": 7,
+      "completion": 1.0,
+      "tool_selection": 1.0
+    },
+    "运行时状态": {
+      "n": 2,
+      "completion": 1.0,
+      "tool_selection": 1.0
+    }
+  }
+}
