@@ -129,7 +129,7 @@ async def _ensure_started() -> None:
 async def get_mcp_tools() -> tuple[list[dict], dict]:
     """返回 (OpenAI 工具 schema 列表, 工具名→async 函数)。
 
-    - MCP 不可用时返回 ([], {})，不影响手写工具；原因见 get_mcp_status()
+    - MCP 不可用时返回 ([], {})，不影响内置工具；原因见 get_mcp_status()
     - 首次调用会建立连接，之后进程内复用
     """
     if _state["tools"] is None:

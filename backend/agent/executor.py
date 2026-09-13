@@ -1,7 +1,7 @@
 """
 Agent 执行循环（异步，流式 ReAct）
 
-手写 Function Calling 循环（面试亮点，勿换成框架）：
+自研 Agent 执行循环（Function Calling，不引入 Agent 框架）：
 
     run_agent_stream 是一个异步生成器，逐个 yield 事件 dict（type 字段区分）：
         status      阶段提示         {type, message}
@@ -51,7 +51,7 @@ def create_agent_client(settings: Settings) -> AsyncOpenAI:
 # 模型会被要求去调用一个根本不存在的工具。
 _RUNTIME_STATE_TOOLS = ("get_current_time", "get_system_info")
 
-# 每个手写工具在 prompt 里的一句话简介;未列出的(MCP 动态工具)回退用 schema 里的 description
+# 每个内置工具在 prompt 里的一句话简介;未列出的(MCP 动态工具)回退用 schema 里的 description
 _TOOL_BRIEF = {
     "knowledge_search": "knowledge_search: 搜索知识库文档(制度/流程/规定等),返回带引用编号 [id] 的文档片段(编号在本次回答内全局唯一,引用时照抄)",
     "get_document": "get_document: 读取指定文档的内容(长文档分页,按返回的 has_more/next_offset 续读)",

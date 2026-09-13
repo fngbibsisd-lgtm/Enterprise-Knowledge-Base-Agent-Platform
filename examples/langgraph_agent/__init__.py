@@ -1,1 +1,1 @@
-"""LangGraph 对照实现：用状态机复刻手写 Function Calling 循环。"""
+"""LangGraph 对照实现：用状态机复刻自研 Agent 执行循环。"""

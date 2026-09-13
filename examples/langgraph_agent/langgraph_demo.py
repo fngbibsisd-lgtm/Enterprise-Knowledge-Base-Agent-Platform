@@ -1,9 +1,9 @@
 """
-LangGraph 对照 demo —— 用 LangGraph 的状态机复刻「手写 Function Calling 循环」。
+LangGraph 对照 demo —— 用 LangGraph 的状态机复刻「自研 Agent 执行循环」。
 
-目的：证明「既懂框架、也懂它底层怎么跑」。对照关系：
+目的：对照说明框架在底层做了什么。对照关系：
 
-    手写 executor.py 的循环                 LangGraph 的图
+    executor.py 的循环                      LangGraph 的图
     ───────────────────────────────────     ──────────────────────────────
     _stream_completion (调 LLM)        =    agent 节点
     _execute_tool_calls (执行工具)      =    tools 节点

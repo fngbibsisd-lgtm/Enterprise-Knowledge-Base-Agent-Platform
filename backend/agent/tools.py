@@ -107,11 +107,11 @@ def get_tool_map():
 
 
 async def get_all_tools() -> tuple[list[dict], dict]:
-    """合并手写工具 + MCP 工具，返回 (OpenAI schema 列表, 工具名→函数映射)。
+    """合并内置工具 + MCP 工具，返回 (OpenAI schema 列表, 工具名→函数映射)。
 
     executor 用它取代「直接读 TOOLS / get_tool_map」，从而支持 MCP 动态工具。
 
-    MCP 是可选能力，两条降级路径都不影响手写工具可用：
+    MCP 是可选能力，两条降级路径都不影响内置工具可用：
         - 没装 mcp 包（ImportError）
         - 装了但 server 连不上（get_mcp_tools 内部已兜底，返回空）
     """

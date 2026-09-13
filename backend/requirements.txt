@@ -20,7 +20,7 @@ pymilvus>=2.5,<4
 milvus-lite>=2.4
 
 # ===== 可选能力 A：MCP 动态工具（examples/mcp）=====
-# 未安装时 agent 自动退化为「仅手写工具」，主线问答不受影响（见 backend/agent/tools.py）
+# 未安装时 agent 自动退化为「仅内置工具」，主线问答不受影响（见 backend/agent/tools.py）
 # 注意：demo_server 用的是 mcp 2.x 的 MCPServer（1.x 叫 FastMCP），故下限为 2.0
 mcp>=2.0
 
